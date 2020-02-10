@@ -1,9 +1,11 @@
 mkdir -p ~root/.ssh
 cp ~vagrant/.ssh/auth* ~root/.ssh
+lsblk
 yum install -y mdadm smartmontools hdparm gdisk
 mdadm --zero-superblock --force /dev/sd[b-g]
 mdadm --create --verbose /dev/md0 -l 10 -n 6 /dev/sd[b-g]
 sleep 10
+lsblk
 cat /proc/mdstat
 mdadm -D /dev/md0
 mkdir /etc/mdadm/
@@ -27,3 +29,6 @@ mkdir -p /raid/part{1,2,3,4,5}
 #for i in $(seq 1 5); do mount /dev/md0p$i /raid/part$i; done
 for i in $(seq 1 5); do echo "/dev/md0p$i /raid/part$i ext4 defaults 0 0" >> /etc/fstab; done
 mount -a
+lsblk
+cat /etc/mdadm/mdadm.conf
+cat /etc/fstab
