@@ -13,12 +13,17 @@
         }
 ```
 Отключение общих папок
+
 `config.vm.synced_folder ".", "/vagrant", disabled: true`
-Подключение файла для "провиженинга" 
+
+Подключение файла для "провиженинга"
+ 
 `config.vm.provision "shell", path: "[script.sh](script.sh)"`
 
 2. `vagrant up`
-[Vagrant file](Vagrantfile)  
+
+[Vagrant file](Vagrantfile) - также собирает рэйд, монтирует, добавляет конфиг в /etc/fstab и /etc/mdadm/mdadm.conf
+  
 2. Устанавливаете VirtualBox: <https://www.tecmint.com/install-virtualbox-on-redhat-centos-fedora>
 3. Клонируете репозиторий со стендом и запускаете виртуальную машину:
     ```bash
