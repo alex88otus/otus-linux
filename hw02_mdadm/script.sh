@@ -1,8 +1,8 @@
 mkdir -p ~root/.ssh
 cp ~vagrant/.ssh/auth* ~root/.ssh
 yum install -y mdadm smartmontools hdparm gdisk
-mdadm --zero-superblock --force /dev/sd[a-f]
-mdadm --create --verbose /dev/md0 -l 10 -n 6 /dev/sd[a-f]
+mdadm --zero-superblock --force /dev/sd[b-g]
+mdadm --create --verbose /dev/md0 -l 10 -n 6 /dev/sd[b-g]
 sleep 10
 cat /proc/mdstat
 mdadm -D /dev/md0
