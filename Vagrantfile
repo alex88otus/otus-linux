@@ -25,12 +25,12 @@ MACHINES = {
                         :dfile => './sata4.vdi',
                         :size => 250, # Megabytes
                         :port => 4
-                }
+                },
                 :sata5 => {
                         :dfile => './sata5.vdi',
                         :size => 250, # Megabytes
                         :port => 5
-		}
+		},
 		:sata4 => {
                         :dfile => './sata6.vdi',
                         :size => 250, # Megabytes
