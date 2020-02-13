@@ -1,6 +1,6 @@
-##Урок №2: **mdadm**
-###Решение
-1. Добавление в 2х дисков в Vagrant file
+## Урок №2: **mdadm**
+### Решение
+#### 1. Добавление в 2х дисков в Vagrant file
 ```ruby
 :sata5 => {
   :dfile => './sata5.vdi',
@@ -21,7 +21,7 @@
  
 `config.vm.provision "shell", path: "script.sh"`
 
-2. `vagrant up`
+#### 2. `vagrant up`
 
 [Vagrant file](Vagrantfile) - также собирает рэйд, монтирует, добавляет конфиг в /etc/fstab и /etc/mdadm/mdadm.conf
   
@@ -39,7 +39,7 @@ otuslinux: sdg      8:96   0  250M  0 disk
 ```
 для демонстрации того что 6 дисков подключены корректно
 
-3. Работа файла [script.sh](script.sh)
+#### 3. Работа файла [script.sh](script.sh)
 
 Установка необходимых софта
 
@@ -191,5 +191,6 @@ sdg         8:96   0   250M  0 disk
   ├─md0p3 259:7    0   150M  0 md     /raid/part3
   ├─md0p4 259:8    0 148.5M  0 md     /raid/part4
   └─md0p5 259:9    0   147M  0 md     /raid/part5
-###Конец решения
-##Решены базовое задание + "со звездочкой"
+```
+### Конец решения
+### Выполнены: базовое задание + "со звездочкой"
