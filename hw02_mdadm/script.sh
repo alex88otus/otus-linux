@@ -4,7 +4,7 @@ lsblk
 yum install -y mdadm smartmontools hdparm gdisk
 mdadm --zero-superblock --force /dev/sd[b-g]
 mdadm --create --verbose /dev/md0 -l 10 -n 6 /dev/sd[b-g]
-sleep 10
+sleep 5
 lsblk
 cat /proc/mdstat
 mdadm -D /dev/md0
@@ -15,9 +15,10 @@ mdadm /dev/md0 --fail /dev/sde
 cat /proc/mdstat
 mdadm /dev/md0 --remove /dev/sde
 mdadm /dev/md0 --add /dev/sde
+sleep 3
 cat /proc/mdstat
 mdadm -D /dev/md0
-sleep 10
+sleep 5
 parted -s /dev/md0 mklabel gpt
 parted /dev/md0 mkpart primary ext4 0% 20%
 parted /dev/md0 mkpart primary ext4 20% 40%
