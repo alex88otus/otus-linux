@@ -1,2 +1,3 @@
 .vagrant
 *.vdi
+packer/packer_cache
