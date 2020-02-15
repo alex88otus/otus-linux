@@ -24,7 +24,7 @@ curl https://releases.hashicorp.com/packer/1.5.1/packer_1.5.1_linux_amd64.zip | 
 ```bash
 {
   "variables": {
-    "artifact_description": "CentOS 7.7 with kernel 5.5.3",
+    "artifact_description": "CentOS 7.7 with kernel 5.5.4",
     "artifact_version": "7.7.1908",
     "image_name": "centos-7-5"
   },
@@ -55,9 +55,9 @@ yum install -y wget openssl-devel elfutils-libelf-devel bc
 ```
 Скачивание и распаковка исходников нового ядра
 ```bash
-wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.5.3.tar.xz
-tar -xvf linux-5.5.3.tar.xz
-cd linux-5.5.3
+wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.5.4.tar.xz
+tar -xvf linux-5.5.4.tar.xz
+cd linux-5.5.4
 ```
 Подготовка сонфигурационного файла ос
 ```bash
@@ -79,7 +79,7 @@ sudo grub2-set-default 0
 Очистка
 ```bash
 cd ..
-rm -rf linux-5.5.3 linux-5.5.3.tar.xz
+rm -rf linux-5.5.4 linux-5.5.4.tar.xz
 ```
 ##### - Создаем Vagrant box в автоматическом режиме командой `packer build centos.json`
 Результатом будет являться файл **centos-7.7.1908-kernel-5-x86_64-Minimal.box**
@@ -102,8 +102,11 @@ centos/7   (virtualbox, 1905.1)
               # VM box
               :box_name => "centos-7-5",
 ```
-Запускаем `vagrant up`
+Запускаем `vagrant up`, логинимся `vagrant ssh`, смотрим версию ядра
 ```bash
+[vagrant@kernel-update ~]$ uname -r
+5.5.4
+```
 ```bash
 ```bash
 ```bash
