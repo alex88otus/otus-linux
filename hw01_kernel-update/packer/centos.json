@@ -1,6 +1,6 @@
 {
   "variables": {
-    "artifact_description": "CentOS 7.7 with kernel 5.5.3",
+    "artifact_description": "CentOS 7.7 with kernel 5.5.4",
     "artifact_version": "7.7.1908",
     "image_name": "centos-7-5"
   },

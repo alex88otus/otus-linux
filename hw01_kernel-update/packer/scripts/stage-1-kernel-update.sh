@@ -14,9 +14,9 @@
 yum groupinstall -y "Development Tools"
 yum install -y wget openssl-devel elfutils-libelf-devel bc
 #Скачиваем исходники нового ядра
-wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.5.3.tar.xz
-tar -xvf linux-5.5.3.tar.xz
-cd linux-5.5.3
+wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.5.4.tar.xz
+tar -xvf linux-5.5.4.tar.xz
+cd linux-5.5.4
 cp /boot/config-$(uname -r) .config
 #Редактирование конфига для устранения ошибки в процессе компиляции
 sed -ri '/CONFIG_SYSTEM_TRUSTED_KEYS/s/=.+/=""/g' .config
@@ -28,7 +28,7 @@ sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 sudo grub2-set-default 0
 #Очистка
 cd ..
-rm -rf linux-5.5.3 linux-5.5.3.tar.xz
+rm -rf linux-5.5.4 linux-5.5.4.tar.xz
 echo "Grub update done."
 # Reboot VM
 shutdown -r now
