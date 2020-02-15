@@ -28,7 +28,7 @@ sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 sudo grub2-set-default 0
 #Очистка
 cd ..
-rm -rf linux-5.5.3
+rm -rf linux-5.5.3 linux-5.5.3.tar.xz
 echo "Grub update done."
 # Reboot VM
 shutdown -r now
