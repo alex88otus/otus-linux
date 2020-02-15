@@ -3,7 +3,7 @@ MACHINES = {
   # VM name "kernel update"
   :"kernel-update" => {
               # VM box
-              :box_name => "centos-7-5",
+              :box_name => "alex88otus/centos-7-5",
               # VM CPU count
               :cpus => 12,
               # VM RAM size (Mb)

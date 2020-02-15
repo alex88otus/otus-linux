@@ -19,7 +19,7 @@ yum -y install https://releases.hashicorp.com/vagrant/2.2.7/vagrant_2.2.7_x86_64
 sudo -s
 curl https://releases.hashicorp.com/packer/1.5.1/packer_1.5.1_linux_amd64.zip | sudo gzip -d > /usr/local/bin/packer && sudo chmod +x /usr/local/bin/packer
 ```
-#### 2. Редактирование конфигурационных файлов для Packer
+#### 2. Редактирование конфигурационных файлов для Packer, создание образа
 - [centos.json](packer/centos.json) - конфигурационный файл для Packer
 ```bash
 {
@@ -85,12 +85,12 @@ rm -rf linux-5.5.4 linux-5.5.4.tar.xz
 - Создаем Vagrant box в автоматическом режиме командой `packer build centos.json`
 
 Результатом будет являться файл **centos-7.7.1908-kernel-5-x86_64-Minimal.box**
-#### 4. Тестирование созданного образа в Vagrant
+#### 3. Тестирование созданного образа в Vagrant
 Сразу зальем его в Vagrant cloud, опублекуем
 ```bash
 vagrant cloud publish --release alex88otus/centos-7-5 1.0 virtualbox centos-7.7.1908-kernel-5-x86_64-Minimal.box
 ```
-Редактируем имеющийся [Vagrantfile](Vargantfile) для запуска нового образа и его проверки
+Редактируем имеющийся [Vagrantfile](Vagrantfile) для запуска нового образа и его проверки
 
 Изменяем **box_name**
 ```bash
@@ -102,4 +102,5 @@ vagrant cloud publish --release alex88otus/centos-7-5 1.0 virtualbox centos-7.7.
 [vagrant@kernel-update ~]$ uname -r
 5.5.4
 ```
-
+### Конец решения
+### Выполнены: базовое задание + "со звездочкой"
