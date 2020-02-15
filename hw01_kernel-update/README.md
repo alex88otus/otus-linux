@@ -20,7 +20,7 @@ sudo -s
 curl https://releases.hashicorp.com/packer/1.5.1/packer_1.5.1_linux_amd64.zip | sudo gzip -d > /usr/local/bin/packer && sudo chmod +x /usr/local/bin/packer
 ```
 #### 2. Редактирование конфигурационных файлов для Packer
-##### - [centos.json](packer/centos.json) - конфигурационный файл для Packer
+- [centos.json](packer/centos.json) - конфигурационный файл для Packer
 ```bash
 {
   "variables": {
@@ -47,7 +47,8 @@ curl https://releases.hashicorp.com/packer/1.5.1/packer_1.5.1_linux_amd64.zip | 
               "scripts/stage-2-clean.sh"
             ]
 ```
-##### - [stage-1-kernel-update.sh](packer/scripts/stage-1-kernel-update.sh)
+- [stage-1-kernel-update.sh](packer/scripts/stage-1-kernel-update.sh)
+
 Установка необходимых утилит
 ```bash
 yum groupinstall -y "Development Tools"
@@ -81,36 +82,24 @@ sudo grub2-set-default 0
 cd ..
 rm -rf linux-5.5.4 linux-5.5.4.tar.xz
 ```
-##### - Создаем Vagrant box в автоматическом режиме командой `packer build centos.json`
+- Создаем Vagrant box в автоматическом режиме командой `packer build centos.json`
+
 Результатом будет являться файл **centos-7.7.1908-kernel-5-x86_64-Minimal.box**
 #### 4. Тестирование созданного образа в Vagrant
-
-Импортируем box командой `vagrant box add --name centos-7-5 centos-7.7.1908-kernel-5-x86_64-Minimal.box`
-
-Проверяем аго наличие в списке `vagrant box list`
+Сразу зальем его в Vagrant cloud, опублекуем
 ```bash
-centos-7-5 (virtualbox, 0)
-```
-```bash
-**centos-7-5 (virtualbox, 0)**
-centos/7   (virtualbox, 1905.1)
+vagrant cloud publish --release alex88otus/centos-7-5 1.0 virtualbox centos-7.7.1908-kernel-5-x86_64-Minimal.box
 ```
 Редактируем имеющийся [Vagrantfile](Vargantfile) для запуска нового образа и его проверки
 
 Изменяем **box_name**
 ```bash
               # VM box
-              :box_name => "centos-7-5",
+              :box_name => "alex88otus/centos-7-5",
 ```
 Запускаем `vagrant up`, логинимся `vagrant ssh`, смотрим версию ядра
 ```bash
 [vagrant@kernel-update ~]$ uname -r
 5.5.4
 ```
-```bash
-```bash
-```bash
-```bash
-```bash
-```bash
 
