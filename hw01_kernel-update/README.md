@@ -10,7 +10,7 @@ yum -y install wget gcc make perl elfutils-libelf-devel git kernel-devel
 wget -P /etc/yum.repos.d/ https://download.virtualbox.org/virtualbox/rpm/el/virtualbox.repo
 yum -y install VirtualBox-6.1
 ```
-Установка Vagrant 
+Установка Vagrant
 ```bash
 yum -y install https://releases.hashicorp.com/vagrant/2.2.7/vagrant_2.2.7_x86_64.rpm
 ```

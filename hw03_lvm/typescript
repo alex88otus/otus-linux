@@ -1,0 +1,128 @@
+Script started on 2020-02-18 17:30:42+0300
+[1m[7m%[27m[1m[0m                                                                                          ]2;ag@G3-3579: /GIT/otus-linux/hw03_lvm]1;..inux/hw03_lvm[0m[27m[24m[J[01;32m➜  [36mhw03_lvm[00m [01;34mgit:([31mmaster[34m) [33m✗[00m [K[?1h=[?2004hvvagrant ssh[?1l>[?2004l
+]2;vagrant ssh]1;vagrantLast login: Tue Feb 18 14:05:47 2020 from 10.0.2.2
+]0;vagrant@lvm:~[?1034h[vagrant@lvm ~]$ cd /
+]0;vagrant@lvm:/[vagrant@lvm /]$ sudo -s
+]0;root@lvm:/[?1034h[root@lvm /]# touch /home/file{1..20}
+]0;root@lvm:/[root@lvm /]# lvcreate -L 100MB -s -n home_snap /dev/VolGroup00/LogVol_Home
+  Rounding up size to full physical extent 128.00 MiB
+  Logical volume "home_snap" created.
+]0;root@lvm:/[root@lvm /]# lsblk
+NAME                            MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                               8:0    0   40G  0 disk 
+├─sda1                            8:1    0    1M  0 part 
+├─sda2                            8:2    0    1G  0 part /boot
+└─sda3                            8:3    0   39G  0 part 
+  ├─VolGroup00-lv_root          253:0    0    8G  0 lvm  /
+  ├─VolGroup00-LogVol01         253:1    0  1.5G  0 lvm  [SWAP]
+  ├─VolGroup00-LogVol_Home-real 253:8    0    2G  0 lvm  
+  │ ├─VolGroup00-LogVol_Home    253:7    0    2G  0 lvm  /home
+  │ └─VolGroup00-home_snap      253:10   0    2G  0 lvm  
+  └─VolGroup00-home_snap-cow    253:9    0  128M  0 lvm  
+    └─VolGroup00-home_snap      253:10   0    2G  0 lvm  
+sdb                               8:16   0   10G  0 disk 
+sdc                               8:32   0    2G  0 disk 
+sdd                               8:48   0    1G  0 disk 
+├─vg_var-lv_var_rmeta_1         253:4    0    4M  0 lvm  
+│ └─vg_var-lv_var               253:6    0 1000M  0 lvm  /var
+└─vg_var-lv_var_rimage_1        253:5    0 1000M  0 lvm  
+  └─vg_var-lv_var               253:6    0 1000M  0 lvm  /var
+sde                               8:64   0    1G  0 disk 
+├─vg_var-lv_var_rmeta_0         253:2    0    4M  0 lvm  
+│ └─vg_var-lv_var               253:6    0 1000M  0 lvm  /var
+└─vg_var-lv_var_rimage_0        253:3    0 1000M  0 lvm  
+  └─vg_var-lv_var               253:6    0 1000M  0 lvm  /var
+]0;root@lvm:/[root@lvm /]# ll /home/
+total 0
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file1
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file10
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file11
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file12
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file13
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file14
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file15
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file16
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file17
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file18
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file19
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file2
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file20
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file3
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file4
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file5
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file6
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file7
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file8
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file9
+drwx------. 3 vagrant vagrant 95 Feb 18 13:22 [0m[38;5;27mvagrant[0m
+]0;root@lvm:/[root@lvm /]# rm -f /home/file{11..20}
+]0;root@lvm:/[root@lvm /]# rm -f /home/file{11..20}[C[C[C[C[C[C[C[C[C[C[C[C[C[C[15Pll /home/
+total 0
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file1
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file10
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file2
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file3
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file4
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file5
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file6
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file7
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file8
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file9
+drwx------. 3 vagrant vagrant 95 Feb 18 13:22 [0m[38;5;27mvagrant[0m
+]0;root@lvm:/[root@lvm /]# umount /home/
+]0;root@lvm:/[root@lvm /]# lvconvert --merge /dev/VolGroup00/home_snap
+  Merging of volume VolGroup00/home_snap started.
+  VolGroup00/LogVol_Home: Merged: 100.00%
+]0;root@lvm:/[root@lvm /]# mount /home/
+]0;root@lvm:/[root@lvm /]# mount /home/lvconvert --merge /dev/VolGroup00/home_snap[C[C[C[C[C[C[C[C[C[C[C[C[C[Cumount /home/[K[4Pll[C[C[C[C[C[C[C
+total 0
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file1
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file10
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file11
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file12
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file13
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file14
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file15
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file16
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file17
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file18
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file19
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file2
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file20
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file3
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file4
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file5
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file6
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file7
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file8
+-rw-r--r--. 1 root    root     0 Feb 18 14:31 file9
+drwx------. 3 vagrant vagrant 95 Feb 18 13:22 [0m[38;5;27mvagrant[0m
+]0;root@lvm:/[root@lvm /]# lsblk 
+NAME                       MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                          8:0    0   40G  0 disk 
+├─sda1                       8:1    0    1M  0 part 
+├─sda2                       8:2    0    1G  0 part /boot
+└─sda3                       8:3    0   39G  0 part 
+  ├─VolGroup00-lv_root     253:0    0    8G  0 lvm  /
+  ├─VolGroup00-LogVol01    253:1    0  1.5G  0 lvm  [SWAP]
+  └─VolGroup00-LogVol_Home 253:7    0    2G  0 lvm  /home
+sdb                          8:16   0   10G  0 disk 
+sdc                          8:32   0    2G  0 disk 
+sdd                          8:48   0    1G  0 disk 
+├─vg_var-lv_var_rmeta_1    253:4    0    4M  0 lvm  
+│ └─vg_var-lv_var          253:6    0 1000M  0 lvm  /var
+└─vg_var-lv_var_rimage_1   253:5    0 1000M  0 lvm  
+  └─vg_var-lv_var          253:6    0 1000M  0 lvm  /var
+sde                          8:64   0    1G  0 disk 
+├─vg_var-lv_var_rmeta_0    253:2    0    4M  0 lvm  
+│ └─vg_var-lv_var          253:6    0 1000M  0 lvm  /var
+└─vg_var-lv_var_rimage_0   253:3    0 1000M  0 lvm  
+  └─vg_var-lv_var          253:6    0 1000M  0 lvm  /var
+]0;root@lvm:/[root@lvm /]# exit
+exit
+]0;vagrant@lvm:/[vagrant@lvm /]$ exit
+logout
+Connection to 127.0.0.1 closed.
+[1m[7m%[27m[1m[0m                                                                                          ]2;ag@G3-3579: /GIT/otus-linux/hw03_lvm]1;..inux/hw03_lvm[0m[27m[24m[J[01;32m➜  [36mhw03_lvm[00m [01;34mgit:([31mmaster[34m) [33m✗[00m [K[?1h=[?2004heexit[?1l>[?2004l
+]2;exit]1;exit
+Script done on 2020-02-18 17:33:37+0300
