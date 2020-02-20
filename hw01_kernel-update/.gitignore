@@ -1,4 +1,0 @@
-.vagrant
-*.vdi
-packer/packer_cache
-packer/centos-7*

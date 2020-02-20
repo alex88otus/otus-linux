@@ -1,2 +1,5 @@
 .vagrant
 *.vdi
+hw01_kernel-update/packer/packer_cache
+hw01_kernel-update/packer/centos-7*
+
