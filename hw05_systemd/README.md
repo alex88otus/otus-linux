@@ -4,147 +4,158 @@
 ```bash
 vagrant init centos/7
 ```
-Вносим изменения в [Vagrantfile](Vagrantfile) дабы отобразить экран VM. Версия бокса 1804 даст нам систему уже установленную на **LVM**.
-```bash
-  config.vm.box_version = "1804.02"
-  config.vm.provider "virtualbox" do |vb|
-    # Display the VirtualBox GUI when booting the machine
-    vb.gui = true
-  end
-```
-#### 1. Получение доступа к системе без пароля
-- Способ 1: `init=/bin/sh`
+#### 1. Написать сервис **watchlog**, запускаемый по расписанию
 
-Строчка добавляется в параметры загрузки (куда попадаем из меню выбора ОС нажатием клавиши *е*) в конце строки начинающейся с `linux16`. Обязательно удаляем параметр `console=ttyS0,115200n8` иначе получаем *Kernel panic*. Параметры  `rhgb` и `quiet` также удаляем чтобы лицезреть процесс загрузки
-```bash
-	linux16 /vmlinuz-3.10.0-862.2.3.el7.x86_64 root=/dev/mapper/VolGroup00-LogVol00 ro no_timer_check console=tty0 net.ifnames=0 biosdevname=0 elevator=noop crashkernel=auto rd.lvm.lv=VolGroup00/LogVol00 rd.lvm.lv=VolGroup00/LogVol01 init=/bin/sh
-```
-*Ctrl-X* для загрузки, попадаем CL
-```bash
-sh-4.2# whoami
-root
-```
-Вывод `mount | grep LogVol00` для просмотра параметром монтирования
-```bash
-/dev/mapper/VolGroup00-LogVol00 on / type xfs (ro,relatime,attr2,inode64,noquota)
-```
-**/** замонтирован в режиме *Read-Only*, перемонтируем в режиме *Read-Write* командой `mount -o remount,rw /`
+Необходимые файлы расположем в подкаталоге рабочего каталога [watchlog](watchlog), посмотрим что внутри
 
-Вывод `mount | grep LogVol00`
+`cat etc/sysconfig/watchlog`
 ```bash
-/dev/mapper/VolGroup00-LogVol00 on / type xfs (rw,relatime,attr2,inode64,noquota)
+# Configuration file for my watchdog service
+# Place it to /etc/sysconfig
+# File and word in that file that we will be monit
+WORD="ALERT"
+LOG=/var/log/watchlog.log
 ```
-- Способ 2: `rd.break`
+`cat etc/systemd/system/watchlog.service`
+```bash
+[Unit]
+Description=My watchlog service
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/sysconfig/watchlog
+ExecStart=/opt/watchlog.sh $WORD $LOG
+```
+`cat etc/systemd/system/watchlog.timer`
+```bash
+[Unit]
+Description=Run watchlog script every 5 second
+Requires=watchlog.service
+[Timer]
+# Run every 5 second
+OnUnitActiveSec=5
+AccuracySec=1us
+Unit=watchlog.service
+[Install]
+WantedBy=multi-user.target
+```
+`cat opt/watchlog.sh`
+```bash
+#!/bin/bash
+WORD=$1
+LOG=$2
+DATE=`date`
+if grep $WORD $LOG &> /dev/null
+then
+logger "$DATE: I found word, Master!"
+else
+exit 0
+fi
+```
+`cat var/log/watchlog.log`
+```bash
+ALERT
+```
+При запуске VM этот каталог скопируется внутрь гостевой системы в каталог `/vagrant`.  Скопируем файлы сервиса в необходимые каталоги, сделаем файл скрипта исполняемым
+```bash
+sudo -s
+cp -r /vagrant/watchlog/* /
+chmod +x /opt/watchlog.sh
+```
+Запустим *timer* командой `systemctl start watchlog.timer`, проверим работу
+```bash
+[root@localhost vagrant]# tail -f /var/log/messages
+Feb 22 12:51:53 localhost systemd: Starting My watchlog service...
+Feb 22 12:51:53 localhost root: Sat Feb 22 12:51:53 UTC 2020: I found word, Master!
+Feb 22 12:51:53 localhost systemd: Started My watchlog service.
+Feb 22 12:51:58 localhost systemd: Starting My watchlog service...
+Feb 22 12:51:58 localhost root: Sat Feb 22 12:51:58 UTC 2020: I found word, Master!
+Feb 22 12:51:58 localhost systemd: Started My watchlog service.
+Feb 22 12:52:03 localhost systemd: Starting My watchlog service...
+Feb 22 12:52:03 localhost root: Sat Feb 22 12:52:03 UTC 2020: I found word, Master!
+Feb 22 12:52:03 localhost systemd: Started My watchlog service.
+Feb 22 12:52:08 localhost systemd: Starting My watchlog service...
+Feb 22 12:52:08 localhost root: Sat Feb 22 12:52:08 UTC 2020: I found word, Master!
+Feb 22 12:52:08 localhost systemd: Started My watchlog service.
+```
+Работает корректно
+#### 2. Из репозитория epel установить spawn-fcgi и переписать init-скрипт на unit-файл (имя service должно называться так же: spawn-fcgi)
 
-Идентичен первому способу, но в конце строки начинающейся с `linux16` добавляется `rd.break`
+Устанавливаем необходимые пакеты
 ```bash
-	linux16 /vmlinuz-3.10.0-862.2.3.el7.x86_64 root=/dev/mapper/VolGroup00-LogVol00 ro no_timer_check console=tty0 net.ifnames=0 biosdevname=0 elevator=noop crashkernel=auto rd.lvm.lv=VolGroup00/LogVol00 rd.lvm.lv=VolGroup00/LogVol01 rd.break
+yum install epel-release -y && yum install spawn-fcgi php php-cli mod_fcgid httpd -y
 ```
-*Ctrl-X* для загрузки, попадаем CL
 ```bash
-switch_root:/# whoami
-sh: whoami: command not found
+# You must set some working options before the "spawn-fcgi" service will work.
+# If SOCKET points to a file, then this file is cleaned up by the init script.
+#
+# See spawn-fcgi(1) for all possible options.
+#
+# Example :
+SOCKET=/var/run/php-fcgi.sock
+OPTIONS="-u apache -g apache -s $SOCKET -S -M 0600 -C 32 -F 1 -P /var/run/spawn-fcgi.pid -- /usr/bin/php-cgi"
 ```
-Вывод `mount | grep LogVol00` для просмотра параметром монтирования
+```
 ```bash
-/dev/mapper/VolGroup00-LogVol00 on /sysroot type xfs (ro,relatime,attr2,inode64,noquota)
+[Unit]
+Description=Spawn-fcgi startup service by Otus
+After=network.target
+[Service]
+Type=simple
+PIDFile=/var/run/spawn-fcgi.pid
+EnvironmentFile=/etc/sysconfig/spawn-fcgi
+ExecStart=/usr/bin/spawn-fcgi -n $OPTIONS
+KillMode=process
+[Install]
+WantedBy=multi-user.target
 ```
-Корневой раздел замонтирован в режиме *Read-Only* в директорию `/sysroot`, перемонтируем *на запись* командой `mount -o remount,rw /sysroot`
+yes | cp -fr /vagrant/spawn-fcgi/* /
 
-Вывод `mount | grep LogVol00`
 ```bash
-/dev/mapper/VolGroup00-LogVol00 on /sysroot type xfs (rw,relatime,attr2,inode64,noquota)
-```
-ФС замонтирована *на запись*. Попробем поменять пароль администратора
-```bash
-switch_root:/# chroot /sysroot
-sh-4.2# passwd root
-Changing password for user root.
-New password:
-Retype new password:
-passwd: all authentication tokens updated successfully.
-sh-4.2# touch /.autorelabel
-sh-4.2# exit
-switch_root:/# exit
-```
-После чего система перезагрузится и можно будет логиниться с новым паролем
-- Способ 3: `rw init=/sysroot/bin/sh`
+[root@localhost vagrant]# systemctl start spawn-fcgi
+[root@localhost vagrant]# systemctl status spawn-fcgi
+● spawn-fcgi.service - Spawn-fcgi startup service by Otus
+   Loaded: loaded (/etc/systemd/system/spawn-fcgi.service; disabled; vendor preset: disabled)
+   Active: active (running) since Sat 2020-02-22 13:39:21 UTC; 5s ago
+ Main PID: 5097 (php-cgi)
+   CGroup: /system.slice/spawn-fcgi.service
+           ├─5097 /usr/bin/php-cgi
+           ├─5098 /usr/bin/php-cgi
+           ├─5099 /usr/bin/php-cgi
+           ├─5100 /usr/bin/php-cgi
+           ├─5101 /usr/bin/php-cgi
+           ├─5102 /usr/bin/php-cgi
+           ├─5103 /usr/bin/php-cgi
+           ├─5104 /usr/bin/php-cgi
+           ├─5105 /usr/bin/php-cgi
+           ├─5106 /usr/bin/php-cgi
+           ├─5107 /usr/bin/php-cgi
+           ├─5108 /usr/bin/php-cgi
+           ├─5109 /usr/bin/php-cgi
+           ├─5110 /usr/bin/php-cgi
+           ├─5111 /usr/bin/php-cgi
+           ├─5112 /usr/bin/php-cgi
+           ├─5113 /usr/bin/php-cgi
+           ├─5114 /usr/bin/php-cgi
+           ├─5115 /usr/bin/php-cgi
+           ├─5116 /usr/bin/php-cgi
+           ├─5117 /usr/bin/php-cgi
+           ├─5118 /usr/bin/php-cgi
+           ├─5119 /usr/bin/php-cgi
+           ├─5120 /usr/bin/php-cgi
+           ├─5121 /usr/bin/php-cgi
+           ├─5122 /usr/bin/php-cgi
+           ├─5123 /usr/bin/php-cgi
+           ├─5124 /usr/bin/php-cgi
+           ├─5125 /usr/bin/php-cgi
+           ├─5126 /usr/bin/php-cgi
+           ├─5127 /usr/bin/php-cgi
+           ├─5128 /usr/bin/php-cgi
+           └─5129 /usr/bin/php-cgi
 
-Данный способ также идентичен первому, в нем с помощью параметра `rw` корневая ФС монтируется сразу *на запись*, его можно использовать и в предыдуших примерах.
-```bash
-	linux16 /vmlinuz-3.10.0-862.2.3.el7.x86_64 root=/dev/mapper/VolGroup00-LogVol00 rw init=/sysroot/bin/sh no_timer_check console=tty0 net.ifnames=0 biosdevname=0 elevator=noop crashkernel=auto rd.lvm.lv=VolGroup00/LogVol00 rd.lvm.lv=VolGroup00/LogVol01
+Feb 22 13:39:21 localhost.localdomain systemd[1]: Started Spawn-fcgi startup service by Otus.
 ```
-*Ctrl-X* для загрузки, попадаем CL
-```bash
-:/# whoami
-sh: whoami: command not found
-```
-Вывод `mount | grep LogVol00`
-```bash
-/dev/mapper/VolGroup00-LogVol00 on /sysroot type xfs (rw,relatime,attr2,inode64,noquota)
-```
-#### 2. Переименование VG с установленной системой
-Немного информации
-```bash
-[root@localhost vagrant]# lsblk
-NAME                    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
-sda                       8:0    0   40G  0 disk 
-|-sda1                    8:1    0    1M  0 part 
-|-sda2                    8:2    0    1G  0 part /boot
-`-sda3                    8:3    0   39G  0 part 
-  |-VolGroup00-LogVol00 253:0    0 37.5G  0 lvm  /
-  `-VolGroup00-LogVol01 253:1    0  1.5G  0 lvm  [SWAP]
-```
-Переименуем VG
-```bash
-[root@localhost vagrant]# vgrename VolGroup00 OtusRoot
-  Volume group "VolGroup00" successfully renamed to "OtusRoot"
-```
-Заменим имя VG во всех необходимых конфигурационных файлах
-```bash
-sed -i 's/VolGroup00/OtusRoot/g' /etc/fstab /etc/default/grub /boot/grub2/grub.cfg
-```
-Пересоздадим initrd image
-```bash
-mkinitrd -f -v /boot/initramfs-$(uname -r).img $(uname -r)
-```
-Перезагрузимся и выведем `lsblk`
-```bash
-NAME                  MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
-sda                     8:0    0   40G  0 disk 
-|-sda1                  8:1    0    1M  0 part 
-|-sda2                  8:2    0    1G  0 part /boot
-`-sda3                  8:3    0   39G  0 part 
-  |-OtusRoot-LogVol00 253:0    0 37.5G  0 lvm  /
-  `-OtusRoot-LogVol01 253:1    0  1.5G  0 lvm  [SWAP]
-```
-Система корректно загрузилась после переименования VG
-#### 3. Добавление модуля в **initrd**
-В рабочем каталоге с VM уже есть файлы тестового модуля, включим общие папки в **Vagrantfile**
-```ruby
-  config.vm.synced_folder ".", "/vagrant"#, disabled: true
-```
-Скопируем файлы
-```bash
-cp -r /vagrant/test-module/* /
-```
-Проверим
-```bash
-[vagrant@localhost ~]$ ll /usr/lib/dracut/modules.d/01test/
-total 8
--rw-r--r--. 1 root root 126 Feb 20 17:03 module-setup.sh
--rw-r--r--. 1 root root 332 Feb 20 17:03 test.sh
-```
-Внесем изменения в `/etc/default/grub` для отображения процесса загрузки
-```bash
-sed -i 's/ rhgb quiet//g' /etc/default/grub
-grub2-mkconfig -o /boot/grub2/grub.cfg
-```
-Пресобираем образ *initrd* командой `dracut -f -v`, проверяем наличие тестового модуля
-```bash
-[root@localhost vagrant]# lsinitrd -m /boot/initramfs-$(uname -r).img | grep test
-test
-```
+
+
 Пингвин на месте
 ### Конец решения
 ### Выполненo базовое задание
