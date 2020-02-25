@@ -267,5 +267,59 @@ Feb 25 10:29:56 localhost.localdomain httpd[3768]: AH00558: httpd: Could not rel
 Feb 25 10:29:56 localhost.localdomain systemd[1]: Started The Apache HTTP Server.
 Hint: Some lines were ellipsized, use -l to show in full.
 ```
+Оба инстранса httpd запущены
+#### 4. Скачать демо-версию Atlassian Jira (в данном случае Jira Service Desk) и переписать основной скрипт запуска на unit-файл.
+Установка и настрой производится в автоматическом режиме: [Vagrantfile](Vagrantfile) + подключенный скрипт для провижининга [script.sh](script.sh). Написано по оффициально докуметации: [Installing Jira applications on Linux from Archive File](https://confluence.atlassian.com/adminjiraserver/installing-jira-applications-on-linux-from-archive-file-938846844.html) и [Run Jira as a systemd service on linux](https://confluence.atlassian.com/jirakb/run-jira-as-a-systemd-service-on-linux-979411854.html).
+
+Разберем работу скрипта.
+
+Установка необходимых пакетов, скачивание Jira, установка
+```bash
+yum install -y fontconfig java wget
+wget https://www.atlassian.com/software/jira/downloads/binary/atlassian-servicedesk-4.7.1.tar.gz
+mkdir /opt/atlassian/
+tar -xf atlassian-servicedesk-4.7.1.tar.gz
+mv atlassian-jira-servicedesk-4.7.1-standalone/ /opt/atlassian/jira/
+```
+Добавление юзера jira, раздача необходимых прав ему на рабочие каталоги
+```bash
+useradd jira
+chown -R jira /opt/atlassian/jira/
+chmod -R u=rwx,go-rwx /opt/atlassian/jira/
+mkdir /home/jira/jirasoftware-home
+chown -R jira /home/jira/jirasoftware-home
+chmod -R u=rwx,go-rwx /home/jira/jirasoftware-home
+```
+Необходимые фиксы
+```bash
+sed -i 's/#JIRA_HOME=""/JIRA_HOME="\/home\/jira\/jirasoftware-home"/g' /opt/atlassian/jira/bin/setenv.sh
+sed -i 's/16384/4096/g' /opt/atlassian/jira/bin/setenv.sh
+```
+Создание unit-файла
+```bash
+touch /lib/systemd/system/jira.service
+chmod 664 /lib/systemd/system/jira.service
+echo '[Unit] 
+Description=Atlassian Jira
+After=network.target
+[Service] 
+Type=forking
+User=jira
+PIDFile=/opt/atlassian/jira/work/catalina.pid
+ExecStart=/opt/atlassian/jira/bin/start-jira.sh
+ExecStop=/opt/atlassian/jira/bin/stop-jira.sh
+[Install] 
+WantedBy=multi-user.target' >> /lib/systemd/system/jira.service
+```
+Включение, запуск
+```bash
+systemctl daemon-reload
+systemctl enable jira.service
+systemctl start jira.service
+systemctl status jira.service
+```
+Фото
+![123](https://i.imgur.com/4n5xuLB.png)
+
 ### Конец решения
-### Выполненo базовое задание
+### Выполненo: базовое задание + "со звездочкой"
