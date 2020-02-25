@@ -219,8 +219,7 @@ etc/httpd/conf/2.conf:PidFile /var/run/httpd-2.pid
 ```
 Запустим VM, скопируем файлы по своим каталогам, запускаем сервисы
 ```bash
-[root@localhost vagrant]# systemctl start httpd@1
-[root@localhost vagrant]# systemctl start httpd@2
+systemctl start httpd@1 httpd@2
 ```
 Проверяем
 ```bash
@@ -267,9 +266,9 @@ Feb 25 10:29:56 localhost.localdomain httpd[3768]: AH00558: httpd: Could not rel
 Feb 25 10:29:56 localhost.localdomain systemd[1]: Started The Apache HTTP Server.
 Hint: Some lines were ellipsized, use -l to show in full.
 ```
-Оба инстранса httpd запущены
+Оба инстанса httpd запущены
 #### 4. Скачать демо-версию Atlassian Jira (в данном случае Jira Service Desk) и переписать основной скрипт запуска на unit-файл.
-Установка и настрой производится в автоматическом режиме: [Vagrantfile](Vagrantfile) + подключенный скрипт для провижининга [script.sh](script.sh). Написано по оффициально докуметации: [Installing Jira applications on Linux from Archive File](https://confluence.atlassian.com/adminjiraserver/installing-jira-applications-on-linux-from-archive-file-938846844.html) и [Run Jira as a systemd service on linux](https://confluence.atlassian.com/jirakb/run-jira-as-a-systemd-service-on-linux-979411854.html).
+Установка и настрой производится в автоматическом режиме: [Vagrantfile](Vagrantfile) + подключенный скрипт для провижининга [script.sh](script.sh). Написано по оффициальной докуметации: [Installing Jira applications on Linux from Archive File](https://confluence.atlassian.com/adminjiraserver/installing-jira-applications-on-linux-from-archive-file-938846844.html) и [Run Jira as a systemd service on linux](https://confluence.atlassian.com/jirakb/run-jira-as-a-systemd-service-on-linux-979411854.html).
 
 Разберем работу скрипта.
 
