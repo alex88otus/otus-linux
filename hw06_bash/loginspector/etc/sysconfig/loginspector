@@ -1,5 +1,5 @@
 # Configuration file for my LOGINSPECTOR service
 # Place it to /etc/sysconfig
 # Logfile for inspecting and mail address to send report
-LOG=/GIT/otus-linux/hw06_bash/access-4560-644067.log
+LOG=/var/log/access-4560-644067.log
 MAIL=papagunr@gmail.com
