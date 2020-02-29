@@ -1,0 +1,6 @@
+[Unit]
+Description=My loginspector service
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/sysconfig/loginspector
+ExecStart=/opt/loginspector.sh $WORD $LOG
