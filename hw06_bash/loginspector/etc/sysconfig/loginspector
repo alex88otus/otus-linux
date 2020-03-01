@@ -2,4 +2,4 @@
 # Place it to /etc/sysconfig
 # Logfile for inspecting and mail address to send report
 LOG=/var/log/access-4560-644067.log
-MAIL="papagunr@gmail.com rafaello-96@mail.ru"
+MAIL="papagunr@gmail.com"

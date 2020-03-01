@@ -50,7 +50,7 @@ workdata=$(awk '{if ($2>='${ltime}') print $0 }' $tempfile)
 echo "$workdata" | tail -n1 | awk '{print $2}' >$lasttime
 sync
 #cat $tempmail | 
-mailx -v -s "REPORT $date" -S smtp-use-starttls -S ssl-verify=ignore -S smtp-auth=login -S smtp=smtp://smtp.gmail.com:587 -S from="papagunr@gmail.com(John Doe)" -S smtp-auth-user=papagunr@gmail.com -S smtp-auth-password=ituxdslanalypmjr -S ssl-verify=ignore -S nss-config-dir=~/.certs "$mailadd" < $tempmail
+mailx -v -s "REPORT $date" -S smtp-use-starttls -S ssl-verify=ignore -S smtp-auth=login -S smtp=smtp://smtp.gmail.com:587 -S from="papagunr@gmail.com(John Doe)" -S smtp-auth-user=papagunr@gmail.com -S smtp-auth-password=?????? -S ssl-verify=ignore -S nss-config-dir=~/.certs $mailadd < $tempmail
 rm $pidfile $tempfile $tempmail
 sync
 echo "EVERYTHING DONE!!!!!"

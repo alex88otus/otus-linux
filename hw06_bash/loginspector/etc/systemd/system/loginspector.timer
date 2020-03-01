@@ -2,7 +2,7 @@
 Description=Run loginspector script every 30 min
 Requires=loginspector.service
 [Timer]
-OnBootSec=1min
+#OnBootSec=1min
 OnUnitActiveSec=30min
 #AccuracySec=1us
 Unit=loginspector.service
