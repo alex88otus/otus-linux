@@ -9,18 +9,18 @@ date=$(date +%d/%m/%Y/%H/%M/%S)
 if [[ -f $pidfile ]]; then
     PID=$(cat $pidfile)
     echo "Existing pidfile: $PID"
-    echo "Sleeping"
+    echo "Sleep"
     sleep 60
     if [[ -f $pidfile ]] && [[ -n $(ps -p "$PID" | grep -q "$PID") ]] && [[ -n $(ps -p "$PID" | grep -q "$(basename "$0")") ]] ; then
         kill -9 "$PID"
-        echo "Old process killed"
+        echo "The old process is killed"
         rm $pidfile
         sync
     elif [[ -f $pidfile ]]; then
         rm $pidfile
         sync
     else
-        echo "Old process finished"
+        echo "The old process is finished"
     fi
 fi
 echo $$ >$pidfile
@@ -33,15 +33,17 @@ if [[ ! -f $lasttime ]] || [[ $ltime != [0-9]* ]]; then
     ltime=$(cat $lasttime)
 fi
 workdata=$(echo "$tempdata" | awk '{if ($2>='${ltime}') print $0 }')
+echo "$workdata" | tail -n1 | awk '{print $2}' >$lasttime
+sync
 tempmail=$(
     echo "Report was generated at $date";
     echo ""
-    echo "Last log record in last checking was at $(sed -r 's/^([0-9]{2})([0-9]{2})([0-9]{4})([0-9]{2})([0-9]{2})/\1\/\2\/\3\/\4\/\5\//' $lasttime)"
+    echo "Last log record in last check was at $(sed -r 's/^([0-9]{2})([0-9]{2})([0-9]{4})([0-9]{2})([0-9]{2})/\1\/\2\/\3\/\4\/\5\//' $lasttime)"
     echo ""
-    echo "TOP 15 IPs with the most access times"
+    echo "TOP 15 IPs with max amount of access times"
     echo "$workdata" | awk '{ ipcount[$1]++ } END { for (i in ipcount) { printf "%s %d\n", i, ipcount[i] } }' | sort -k2nr | head -n15 | awk '{printf "%2s. %s   \t%2s times\n", NR, $1, $2}'
     echo ""
-    echo "TOP 10 addresses with the most access times"
+    echo "TOP 10 addresses with max amount of access times"
     echo "$workdata" | awk '{ addrcount[$4]++ } END { for (i in addrcount) { printf "%s %d\n", i, addrcount[i] } }' | sort -k2nr | head -n10 | awk '{printf "%2s. %-52s\t%3s times\n", NR, $1, $2}'
     echo ""
     echo "Return codes list"
@@ -50,9 +52,7 @@ tempmail=$(
     echo "List of all errors"
     echo "$workdata" | awk '{ if ($5>=400) { printf "%s %s\t%s %s\n", $5,$1,$2,$4 } }' | awk '{ printf "%2s. %s\n", NR, $0 }'
 )
-echo "$workdata" | tail -n1 | awk '{print $2}' >$lasttime
-sync
 echo "$tempmail" | mailx -v -s "REPORT $date" -S smtp-use-starttls -S ssl-verify=ignore -S smtp-auth=login -S smtp=smtp://smtp.gmail.com:587 -S from="user@gmail.com(John Doe)" -S smtp-auth-user=user@gmail.com -S smtp-auth-password=?????? -S ssl-verify=ignore -S nss-config-dir=~/.certs "$mailadd"
 rm $pidfile
 sync
-echo "EVERYTHING DONE!!!!!"
+echo "EVERYTHING IS DONE!!!!!"
