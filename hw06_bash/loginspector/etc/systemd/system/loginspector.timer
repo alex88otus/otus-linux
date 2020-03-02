@@ -4,7 +4,7 @@ Requires=loginspector.service
 [Timer]
 #OnBootSec=1min
 OnUnitActiveSec=30min
-#AccuracySec=1us
+AccuracySec=1us
 Unit=loginspector.service
 [Install]
 WantedBy=multi-user.target

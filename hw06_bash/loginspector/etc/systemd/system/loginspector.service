@@ -5,4 +5,4 @@ After=network.target
 Type=oneshot
 User=vagrant
 EnvironmentFile=/etc/sysconfig/loginspector
-ExecStart=/opt/loginspector.sh $LOG $MAIL
+ExecStart=/opt/loginspector.sh $LOG ${MAIL}

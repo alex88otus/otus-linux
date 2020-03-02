@@ -3,35 +3,38 @@
 logfile=$1
 mailadd=$2
 workpath=/opt/loginspector.d
-mkdir $workpath
 pidfile=$workpath/pidfile
 lasttime=$workpath/lasttime
-tempfile=$workpath/tempfile
-tempmail=$workpath/tempmail
 date=$(date +%d/%m/%Y/%H/%M/%S)
 if [[ -f $pidfile ]]; then
-    echo "existing pidfile: $(cat $pidfile)"
+    PID=$(cat $pidfile)
+    echo "Existing pidfile: $PID"
+    echo "Sleeping"
     sleep 60
-    if [[ -f $pidfile ]]; then
-        kill -9 "$(cat $pidfile)"
+    if [[ -f $pidfile ]] && [[ -n $(ps -p "$PID" | grep -q "$PID") ]] && [[ -n $(ps -p "$PID" | grep -q "$(basename "$0")") ]] ; then
+        kill -9 "$PID"
+        echo "Old process killed"
         rm $pidfile
         sync
+    elif [[ -f $pidfile ]]; then
+        rm $pidfile
+        sync
+    else
+        echo "Old process finished"
     fi
 fi
 echo $$ >$pidfile
-echo "new PIDfile: $(cat $pidfile)"
-sed -r 's/""/"empty"/;s/- - \[//;s/] "([A-Z]+ )?/ /;s/( HTTP\/1\.[01])?" / /' "$logfile" | awk '{ print $1,$2,$3,$4,$5 }' | sed 's/\///;s/\///;;s/://;s/://;s/://;s/Aug/08/' >$tempfile
-sync
-echo "made formatted log file"
+echo "New pidfile: $(cat $pidfile)"
+tempdata=$(sed -r 's/""/"empty"/;s/- - \[//;s/] "([A-Z]+ )?/ /;s/( HTTP\/1\.[01])?" / /' "$logfile" | awk '{ print $1,$2,$3,$4,$5 }' | sed 's/\///;s/\///;;s/://;s/://;s/://;s/Aug/08/')
 ltime=$(cat $lasttime)
 if [[ ! -f $lasttime ]] || [[ $ltime != [0-9]* ]]; then
-    head -n1 $tempfile | awk '{ print $2 }' >$lasttime
+    echo "$tempdata" | head -n1 | awk '{ print $2 }' >$lasttime
     sync
     ltime=$(cat $lasttime)
 fi
-workdata=$(awk '{if ($2>='${ltime}') print $0 }' $tempfile)
-{
-    echo "Report was generated at $date"
+workdata=$(echo "$tempdata" | awk '{if ($2>='${ltime}') print $0 }')
+tempmail=$(
+    echo "Report was generated at $date";
     echo ""
     echo "Last log record in last checking was at $(sed -r 's/^([0-9]{2})([0-9]{2})([0-9]{4})([0-9]{2})([0-9]{2})/\1\/\2\/\3\/\4\/\5\//' $lasttime)"
     echo ""
@@ -46,11 +49,10 @@ workdata=$(awk '{if ($2>='${ltime}') print $0 }' $tempfile)
     echo ""
     echo "List of all errors"
     echo "$workdata" | awk '{ if ($5>=400) { printf "%s %s\t%s %s\n", $5,$1,$2,$4 } }' | awk '{ printf "%2s. %s\n", NR, $0 }'
-} >>$tempmail
+)
 echo "$workdata" | tail -n1 | awk '{print $2}' >$lasttime
 sync
-#cat $tempmail | 
-mailx -v -s "REPORT $date" -S smtp-use-starttls -S ssl-verify=ignore -S smtp-auth=login -S smtp=smtp://smtp.gmail.com:587 -S from="papagunr@gmail.com(John Doe)" -S smtp-auth-user=papagunr@gmail.com -S smtp-auth-password=?????? -S ssl-verify=ignore -S nss-config-dir=~/.certs $mailadd < $tempmail
-rm $pidfile $tempfile $tempmail
+echo "$tempmail" | mailx -v -s "REPORT $date" -S smtp-use-starttls -S ssl-verify=ignore -S smtp-auth=login -S smtp=smtp://smtp.gmail.com:587 -S from="user@gmail.com(John Doe)" -S smtp-auth-user=user@gmail.com -S smtp-auth-password=?????? -S ssl-verify=ignore -S nss-config-dir=~/.certs "$mailadd"
+rm $pidfile
 sync
 echo "EVERYTHING DONE!!!!!"
