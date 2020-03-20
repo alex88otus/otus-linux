@@ -5,8 +5,8 @@ services:
     build: ./nginx
     image: alex88otus/nginx:0.1
     volumes:
-      - ./cfg/etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
-      - ./cfg/var/www/php:/var/www/php
+      - ./cfg/etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:z
+      - ./cfg/var/www/php:/var/www/php:z
     ports:
       - "8080:80"
     networks:
@@ -17,9 +17,9 @@ services:
     build: ./php
     image: alex88otus/php:0.1
     volumes:
-      - ./cfg/var/www/php:/var/www/php
-      - ./cfg/etc/php7/php-fpm.conf:/etc/php7/php-fpm.conf
-      - ./cfg/etc/php7/php-fpm.d:/etc/php7/php-fpm.d
+      - ./cfg/etc/php7/php-fpm.conf:/etc/php7/php-fpm.conf:z
+      - ./cfg/etc/php7/php-fpm.d:/etc/php7/php-fpm.d:z
+      - ./cfg/var/www/php:/var/www/php:z
     networks:
       - network001
 networks:
