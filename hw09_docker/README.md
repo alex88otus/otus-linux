@@ -59,6 +59,7 @@ CMD ["php-fpm7", "-F", "-R"]
 ![123](https://i.imgur.com/pnfqw1o.png)
 #### Ссылки на репозиторий
 https://hub.docker.com/repository/docker/alex88otus/nginx
+
 https://hub.docker.com/repository/docker/alex88otus/php
 #### Ответ на вопрос: Можно ли в контейнере собрать ядро?
 Ответ: если мы можем в контейнер установить все небходимые утилиты и их зависимости, то и ядро сможем собрать
