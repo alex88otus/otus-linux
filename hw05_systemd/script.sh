@@ -1,3 +1,4 @@
+#!/bin/bash
 yum install -y fontconfig java wget
 wget https://www.atlassian.com/software/jira/downloads/binary/atlassian-servicedesk-4.7.1.tar.gz
 mkdir /opt/atlassian/
@@ -23,8 +24,9 @@ PIDFile=/opt/atlassian/jira/work/catalina.pid
 ExecStart=/opt/atlassian/jira/bin/start-jira.sh
 ExecStop=/opt/atlassian/jira/bin/stop-jira.sh
 [Install] 
-WantedBy=multi-user.target' >> /lib/systemd/system/jira.service
+WantedBy=multi-user.target' >>/lib/systemd/system/jira.service
 systemctl daemon-reload
 systemctl enable jira.service
 systemctl start jira.service
 systemctl status jira.service
+sud

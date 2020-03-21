@@ -11,7 +11,7 @@ if [[ -f $pidfile ]]; then
     echo "Existing pidfile: $PID"
     echo "Sleep"
     sleep 60
-    if [[ -f $pidfile ]] && [[ -n $(ps -p "$PID" | grep -q "$PID") ]] && [[ -n $(ps -p "$PID" | grep -q "$(basename "$0")") ]] ; then
+    if [[ -f $pidfile ]] && [[ -n $(ps -p "$PID" | grep -q "$PID") ]] && [[ -n $(ps -p "$PID" | grep -q "$(basename "$0")") ]]; then
         kill -9 "$PID"
         echo "The old process is killed"
         rm $pidfile
@@ -36,7 +36,7 @@ workdata=$(echo "$tempdata" | awk '{if ($2>='${ltime}') print $0 }')
 echo "$workdata" | tail -n1 | awk '{print $2}' >$lasttime
 sync
 tempmail=$(
-    echo "Report was generated at $date";
+    echo "Report was generated at $date"
     echo ""
     echo "Last log record in last check was at $(sed -r 's/^([0-9]{2})([0-9]{2})([0-9]{4})([0-9]{2})([0-9]{2})/\1\/\2\/\3\/\4\/\5\//' $lasttime)"
     echo ""
