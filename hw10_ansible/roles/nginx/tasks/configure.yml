@@ -1,0 +1,12 @@
+---
+# configuration tasks file for nginx
+
+- name: NGINX | configure | Create NGINX config file from template
+  template:
+    src: templates/nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify:
+    - reload nginx
+  tags:
+    - nginx-configuration
+    

@@ -1,0 +1,5 @@
+---
+# defaults file for nginx
+
+nginx_listen_port: 8080
+

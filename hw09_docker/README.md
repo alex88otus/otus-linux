@@ -1,4 +1,4 @@
-## Урок №8: **Docker**
+## Урок №9: **Docker**
 ### Решение
 #### Создать кастомные образы nginx и php, объедините их в docker-compose.
 [docker-compose.yml](docker-compose.yml)
