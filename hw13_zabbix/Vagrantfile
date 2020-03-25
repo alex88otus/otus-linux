@@ -1,0 +1,73 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "zabbix" do |zabbix|
+    zabbix.vm.box = "centos/7"
+    zabbix.vm.hostname = 'zabbix'
+
+    zabbix.vm.network :private_network, ip: "192.168.56.101"
+    zabbix.vm.network :forwarded_port, guest: 22, host: 2200, id: "ssh"
+
+
+    zabbix.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--name", "zabbix"]
+    end
+    zabbix.vm.provision "shell", inline: <<-SHELL
+      yum install -y epel-release wget nano 
+    #  yum install -y zabbix40-server-mysql.x86_64 zabbix40-dbfiles-mysql.noarch zabbix40-web-mysql.noarch
+    #  yum install https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm
+    #  yum install mysql-community-server.x86_64
+      setenforce 0
+    SHELL
+  end
+
+  config.vm.define "prometheus" do |prometheus|
+    prometheus.vm.box = "centos/7"
+    prometheus.vm.hostname = 'prometheus'
+
+    prometheus.vm.network :private_network, ip: "192.168.56.102"
+    prometheus.vm.network :forwarded_port, guest: 22, host: 2222, id: "ssh"
+
+    prometheus.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--name", "prometheus"]
+    end
+    prometheus.vm.provision "shell", inline: <<-SHELL
+      yum install -y epel-release wget
+      wget -q https://github.com/prometheus/prometheus/releases/download/v2.16.0/prometheus-2.16.0.linux-amd64.tar.gz
+      tar -xvf prometheus-*.tar.gz
+      wget -q https://dl.grafana.com/oss/release/grafana-6.7.1-1.x86_64.rpm
+      rpm --install --nodeps grafana-6.7.1-1.x86_64.rpm
+
+      SHELL
+  end
+  # Provider-specific configuration so you can fine-tune various
+  # backing providers for Vagrant. These expose provider-specific options.
+  # Example for VirtualBox:
+  #
+  # config.vm.provider "virtualbox" do |vb|
+  #   # Display the VirtualBox GUI when booting the machine
+  #   vb.gui = true
+  #
+  #   # Customize the amount of memory on the VM:
+  #   vb.memory = "1024"
+  # end
+  #
+  # View the documentation for the provider you are using for more
+  # information on available options.
+
+  # Enable provisioning with a shell script. Additional provisioners such as
+  # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the
+  # documentation for more information about their specific syntax and use.
+  # config.vm.provision "shell", inline: <<-SHELL
+  #   apt-get update
+  #   apt-get install -y apache2
+  # SHELL
+end
