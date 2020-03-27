@@ -1,0 +1,26 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "vm" do |vm|
+    vm.vm.box = "centos/7"
+    vm.vm.hostname = 'hostname'
+
+    vm.vm.network :private_network, ip: "192.168.56.101"
+    vm.vm.network :forwarded_port, guest: 22, host: 2200, id: "ssh"
+
+
+    vm.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--name", "hostname"]
+    end
+    vm.vm.provision "shell", inline: <<-SHELL
+      yum install -y epel-release wget nano
+      #yum install -y pam_script
+    SHELL
+  end
+
+end
