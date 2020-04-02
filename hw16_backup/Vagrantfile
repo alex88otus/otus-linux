@@ -1,0 +1,61 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "server" do |server|
+    server.vm.box = "centos/7"
+    server.vm.hostname = 'server'
+
+    server.vm.network :private_network, ip: "192.168.11.11"
+    server.vm.network :forwarded_port, guest: 22, host: 2200, id: "ssh"
+
+
+    server.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--name", "server"]
+    end
+    server.vm.provision "shell", inline: <<-SHELL
+      useradd -m borg
+      mkdir ~borg/.ssh
+      cp /vagrant/.ssh/authorized_keys ~borg/.ssh
+      chown -R borg:borg ~borg/.ssh
+      yum install -y wget nano
+      wget -q https://github.com/borgbackup/borg/releases/download/1.1.11/borg-linux64 -O /usr/local/bin/borg
+      chmod +x /usr/local/bin/borg
+      
+      SHELL
+  end
+
+  config.vm.define "client" do |client|
+    client.vm.box = "centos/7"
+    client.vm.hostname = 'client'
+
+    client.vm.network :private_network, ip: "192.168.11.111"
+    client.vm.network :forwarded_port, guest: 22, host: 2222, id: "ssh"
+
+    client.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--name", "client"]
+    end
+    client.vm.provision "shell", inline: <<-SHELL
+      mkdir ~root/.ssh
+      cp /vagrant/.ssh/id_rsa ~root/.ssh
+      chmod 600 ~root/.ssh/id_rsa
+      yum install -y wget nano
+      wget -q https://github.com/borgbackup/borg/releases/download/1.1.11/borg-linux64 -O /usr/local/bin/borg
+      chmod +x /usr/local/bin/borg
+      # sed -ri 's?(^PATH.+$)?\1:/usr/local/bin?' ~root/.bash_profile
+      ssh-keyscan -H 192.168.11.11 >> ~root/.ssh/known_hosts
+      cp /vagrant/borg_backup.sh /opt
+      chmod +x /opt/borg_backup.sh
+      cp /vagrant/root /var/spool/cron
+      export BORG_PASSPHRASE=Qwerty1234
+      /usr/local/bin/./borg init -e repokey borg@192.168.11.11:BACKUP
+      SHELL
+  end
+end
