@@ -1,7 +1,7 @@
 ## Урок №17: Logging
 ### Решение
 #### Развернуть стенд с ELK
-Стенд описан в [Vagrantfile](Vagrantfile), всё работает сразу после `vagrant up`. Vagrant разворачивает стек (Filebeat -> Logstash -> Elasticsearch <- Kibana>) на 4 виртуальных машинах.
+Стенд описан в [Vagrantfile](Vagrantfile), всё работает сразу после `vagrant up`. Vagrant разворачивает стек (Filebeat -> Logstash -> Elasticsearch <- Kibana) на 4 виртуальных машинах.
 
 Удобная команда для запуска виртуалок одновременно:
 ```bash
