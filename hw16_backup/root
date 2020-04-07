@@ -1,6 +1,4 @@
 SHELL=/bin/bash
 
-# * * */1 * * /opt/borg_backup.sh daily
-# */30 * * * * /opt/borg_backup.sh every30
 */10 * * * * /opt/borg_backup.sh
 

@@ -1,0 +1,106 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "web" do |web|
+    web.vm.box = "centos/7"
+    web.vm.hostname = 'web'
+
+    web.vm.network :private_network, ip: "192.168.11.111"
+    web.vm.network :forwarded_port, guest: 22, host: 2200, id: "ssh"
+
+
+    web.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--name", "web"]
+    end
+    web.vm.provision "shell", inline: <<-SHELL
+      cp /vagrant/*.repo /etc/yum.repos.d
+      yum install -y nano filebeat nginx
+      systemctl daemon-reload
+      systemctl enable nginx filebeat
+      cp /vagrant/conf/nginx.rules /etc/audit/rules.d
+      cp -f /vagrant/conf/nginx.conf /etc/nginx
+      cp -f /vagrant/conf/nginx /etc/logrotate.d
+      cp -f /vagrant/conf/nginx.yml /etc/filebeat/modules.d
+      #cp -f /vagrant/conf/journald.conf /etc/systemd
+      cp -f /vagrant/conf/rsyslog.conf /etc
+      cp -f /vagrant/conf/filebeat.yml /etc/filebeat
+      filebeat modules enable system auditd
+      reboot
+    SHELL
+  end
+
+  config.vm.define "logstash" do |logstash|
+    logstash.vm.box = "centos/7"
+    logstash.vm.hostname = 'logstash'
+
+    logstash.vm.network :private_network, ip: "192.168.11.100"
+    logstash.vm.network :forwarded_port, guest: 22, host: 2201, id: "ssh"
+
+    logstash.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 1024]
+      v.customize ["modifyvm", :id, "--name", "logstash"]
+    end
+    logstash.vm.provision "shell", inline: <<-SHELL
+      cp /vagrant/elasticsearch.repo /etc/yum.repos.d
+      yum install -y nano java logstash
+      systemctl daemon-reload
+      systemctl enable logstash
+      cp -f /vagrant/conf/logstash.conf /etc/logstash/conf.d
+      rm -rf /etc/logstash/logstash-sample.conf
+      systemctl start logstash
+    SHELL
+  end
+
+  config.vm.define "kibana" do |kibana|
+    kibana.vm.box = "centos/7"
+    kibana.vm.hostname = 'kibana'
+
+    kibana.vm.network :private_network, ip: "192.168.11.11"
+    kibana.vm.network :forwarded_port, guest: 22, host: 2202, id: "ssh"
+
+    kibana.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--name", "kibana"]
+    end
+    kibana.vm.provision "shell", inline: <<-SHELL
+      cp /vagrant/elasticsearch.repo /etc/yum.repos.d
+      yum install -y nano kibana
+      systemctl daemon-reload
+      systemctl enable kibana
+      cp -f /vagrant/conf/kibana.yml /etc/kibana
+      systemctl start kibana
+    SHELL
+  end
+
+  config.vm.define "elasticsearch" do |elasticsearch|
+    elasticsearch.vm.box = "centos/7"
+    elasticsearch.vm.hostname = 'elasticsearch'
+
+    elasticsearch.vm.network :private_network, ip: "192.168.11.10"
+    elasticsearch.vm.network :forwarded_port, guest: 22, host: 2203, id: "ssh"
+
+    elasticsearch.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 1024]
+      v.customize ["modifyvm", :id, "--name", "elasticsearch"]
+    end
+    elasticsearch.vm.provision "shell", inline: <<-SHELL
+      cp /vagrant/elasticsearch.repo /etc/yum.repos.d
+      yum install -y nano elasticsearch
+      systemctl daemon-reload
+      systemctl enable elasticsearch
+      cp -f /vagrant/conf/elasticsearch.yml /etc/elasticsearch
+      systemctl start elasticsearch
+    SHELL
+  end
+end

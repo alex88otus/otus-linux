@@ -1,0 +1,15 @@
+/var/log/nginx/error.log
+/var/log/nginx/access.log
+{
+        rotate 0
+        missingok
+        notifempty
+        size 100k
+        create 640 nginx adm
+        sharedscripts
+        postrotate
+                if [ -f /var/run/nginx.pid ]; then
+                        kill -USR1 `cat /var/run/nginx.pid`
+                fi
+        endscript
+}

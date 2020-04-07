@@ -1,0 +1,17 @@
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: true
+  reload.period: 10s
+
+setup.template.settings:
+  index.number_of_shards: 1
+
+output.logstash:
+  hosts: ["192.168.11.100:5044"]
+
+processors:
+  - add_host_metadata: ~
+
+logging.metrics.enabled: false
+logging.to_syslog: false
+logging.to_files: true
