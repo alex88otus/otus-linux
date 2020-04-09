@@ -40,6 +40,8 @@ export BORG_PASSPHRASE=Qwerty1234
 /usr/local/bin/./borg init -e repokey borg@192.168.11.11:BACKUP
 ```
 Ключ `-e repokey` говорит о создании шифрованного репозитория с паролем и ключом, который будет храниться внутри репозитория.
+
+Перечитываем конфигурацию cron командой `systemctl reload crond`
 #### Результаты работы
 ... запуска на 2 часа
 ```bash

@@ -24,7 +24,7 @@
 │           └── nginx.conf.j2
 └── Vagrantfile
 ```
-После `vagrant up` смотрим `vagrant ssh-config` и меняем порт в файле [inventories/all.yml](inventories/all.yml)
+`vagrant up` для запуска vm.
 
 Запускаем
 `ansible-playbook nginx.yml`, смотрим вывод

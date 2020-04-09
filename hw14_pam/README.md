@@ -298,7 +298,7 @@ setcap cap_net_bind_service=ei /usr/bin/ncat
 [day@hostname ~]$ capsh --print
 Current: = cap_net_bind_service+i
 ```
-Проверим предварительно запустив `ncat` ot day
+Проверим предварительно запустив `ncat` от day
 ```bash
 [root@hostname dev]# echo '123123' > /dev/tcp/localhost/80
 
@@ -362,7 +362,7 @@ Connection to 192.168.56.101 closed.
 ```bash
 chmod +x /vagrant/mylogin.sh
 cp /vagrant/mylogin.sh /usr/local/bin/
-sed -i '/pam_nologin/a account\t   required\tpam_exec.so /vagrant/mylogin.sh' /etc/pam.d/sshd
+sed -i '/pam_nologin/a account\t   required\tpam_exec.so /usr/local/bin/mylogin.sh' /etc/pam.d/sshd
 ```
 Поставим дату на воскресенье
 ```bash
@@ -387,7 +387,7 @@ Connection closed by 192.168.56.101 port 22
 Дать конкретному пользователю права работать с докером
 и возможность рестартить докер сервис.
 
-Для использования docker непривелигерованным пользователем достаточно создать группу docker и и добавить в нее пользователя.
+Для использования docker непривелигерованным пользователем достаточно создать группу docker и добавить в нее пользователя.
 Попробуем на user2
 ```bash
 [root@hostname ~]# groupadd docker
