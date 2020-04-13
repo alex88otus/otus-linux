@@ -1,0 +1,88 @@
+- hosts: all
+  become: true
+  tasks:
+  - name: set hostname for all
+    hostname:
+      name: "{{ inventory_hostname }}"
+  - name: update nss
+    yum:
+      name: nss
+      state: latest
+  - name: make sure line 'dns=none' is set in /etc/NetworkManager/NetworkManager.conf
+    ini_file:
+      path: /etc/NetworkManager/NetworkManager.conf
+      state: present
+      no_extra_spaces: yes
+      section: main
+      option: dns
+      value: none
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
+    notify:
+      - reload NetworkManager
+  handlers:
+  - name: reload NetworkManager
+    service:
+      name: NetworkManager
+      state: reloaded
+
+- hosts: ipaserver
+  become: true
+  tasks:
+  - name: deploy resolv.conf template for server
+    template:
+      src: templates/resolv.conf_server
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
+    notify:
+      - reload NetworkManager
+  handlers:
+  - name: reload NetworkManager
+    systemd:
+      name: NetworkManager
+      state: reloaded
+
+- hosts: ipaserver
+  become: true
+  roles:
+  - role: ipaserver
+    state: present
+
+- hosts: ipaclients
+  become: true
+  tasks:
+  - name: deploy resolv.conf template for clients
+    template:
+      src: templates/resolv.conf_client
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
+    notify:
+      - reload NetworkManager
+  handlers:
+  - name: reload NetworkManager
+    systemd:
+      name: NetworkManager
+      state: reloaded
+
+- hosts: ipaclients
+  become: true
+  roles:
+  - role: ipaclient
+    state: present
+
+- hosts: all
+  become: true
+  tasks:
+  - name: enable and start firewalld
+    systemd:
+      name: firewalld
+      enabled: yes
+      state: started

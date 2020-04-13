@@ -1,0 +1,41 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "ipaserver" do |ipaserver|
+    ipaserver.vm.box = "centos/7"
+    ipaserver.vm.hostname = 'ipaserver'
+
+    ipaserver.vm.network :private_network, ip: "192.168.10.10"
+    ipaserver.vm.network :forwarded_port, guest: 22, host: 2200, id: "ssh"
+
+
+    ipaserver.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 2048]
+      v.customize ["modifyvm", :id, "--name", "ipaserver"]
+    end
+    #ipaserver.vm.provision "shell", inline: <<-SHELL
+    #SHELL
+  end
+
+  config.vm.define "ipaclient" do |ipaclient|
+    ipaclient.vm.box = "centos/7"
+    ipaclient.vm.hostname = 'ipaclient'
+
+    ipaclient.vm.network :private_network, ip: "192.168.10.100"
+    ipaclient.vm.network :forwarded_port, guest: 22, host: 2201, id: "ssh"
+
+    ipaclient.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--name", "ipaclient"]
+    end
+    #ipaclient.vm.provision "shell", inline: <<-SHELL
+    #SHELL
+  end
+  
+end

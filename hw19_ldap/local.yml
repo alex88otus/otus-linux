@@ -1,0 +1,9 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: download ansible-freeipa repo and extract
+    unarchive:
+      src: https://github.com/freeipa/ansible-freeipa/archive/master.zip
+      dest: .
+      remote_src: yes
+

@@ -1,0 +1,26 @@
+all:
+  children:
+    ipaserver:
+      hosts:
+        ipaserver.otus88.local:
+          ansible_host: 192.168.10.10
+          ansible_ssh_private_key_file: .vagrant/machines/ipaserver/virtualbox/private_key
+      vars:
+        ipaserver_domain: otus88.local
+        ipaserver_realm: OTUS88.LOCAL
+        ipaserver_setup_dns: yes
+        ipaserver_auto_forwarders: yes
+    ipaclients:
+      hosts:
+        ipaclient.otus88.local:
+          ansible_host: 192.168.10.100
+          ansible_ssh_private_key_file: .vagrant/machines/ipaclient/virtualbox/private_key
+      vars:
+        ipaclient_domain: otus88.local
+        ipaclient_realm: OTUS88.LOCAL
+  vars:
+    ipaadmin_password: Qwerty1234
+    ipadm_password: Qwerty1234
+    ipaclient_mkhomedir: yes
+
+
