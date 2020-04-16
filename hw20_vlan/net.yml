@@ -1,0 +1,86 @@
+- hosts: teamhosts
+  tasks:
+  - name: cp config templates to config-scripts
+    template:
+      src: templates/ifcfg-eth{{ item }}
+      dest: /etc/sysconfig/network-scripts/
+      owner: root
+      group: root
+      mode: 0644
+    with_items:
+      - 1
+      - 2
+- hosts: inetRouter
+  tasks:
+  - name: cp config template to config-scripts
+    template:
+      src: templates/ifcfg-team0_iR
+      dest: /etc/sysconfig/network-scripts/ifcfg-team0
+      owner: root
+      group: root
+      mode: 0644
+- hosts: centralRouter
+  tasks:
+  - name: cp config template to config-scripts
+    template:
+      src: templates/ifcfg-team0_cR
+      dest: /etc/sysconfig/network-scripts/ifcfg-team0
+      owner: root
+      group: root
+      mode: 0644
+
+- hosts: centralRouter
+  tasks:
+  - name: cp config template to config-scripts
+    template:
+      src: templates/ifcfg-eth3
+      dest: /etc/sysconfig/network-scripts/ifcfg-eth3
+      owner: root
+      group: root
+      mode: 0644
+- hosts: vlanhosts
+  tasks:
+  - name: cp config template to config-scripts
+    template:
+      src: templates/ifcfg-eth1_tst
+      dest: /etc/sysconfig/network-scripts/ifcfg-eth1
+      owner: root
+      group: root
+      mode: 0644
+
+- hosts: centralRouter
+  tasks:
+  - name: cp vlan config files to centralRouter
+    template:
+      src: "{{ item }}"
+      dest: /etc/sysconfig/network-scripts/
+      owner: root
+      group: root
+      mode: 0644
+    with_fileglob:
+      - templates/ifcfg-eth3.10*
+
+- hosts: vlanhosts
+  tasks:
+  - name: cp vlan config files to vlanhosts
+    template:
+      src: templates/ifcfg-eth1.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-eth1.{{ vlanid }}
+      owner: root
+      group: root
+      mode: 0644
+
+- hosts: all
+  tasks:
+  - name: restart network service
+    systemd:
+      name: network
+      state: restarted
+
+- hosts: inetRouter
+  tasks:
+  - name: Enable IPv4 forwarding
+    sysctl:
+      name: net.ipv4.conf.all.forwarding
+      value: 1
+      sysctl_set: yes

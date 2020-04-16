@@ -1,0 +1,8 @@
+DEVICE=team0
+DEVICETYPE=Team
+ONBOOT=yes
+BOOTPROTO=static
+IPADDR=192.168.255.2
+PREFIX=24
+GATEWAY=192.168.255.1
+TEAM_CONFIG='{"runner": {"name": "activebackup", "hwaddr_policy": "by_active"}, "link_watch": {"name": "ethtool"}}'

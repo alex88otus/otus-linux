@@ -1,0 +1,121 @@
+- hosts: teamhosts
+  tasks:
+  - name: nmcli add slave eths to team0
+    nmcli:
+      type: team-slave
+      conn_name: "{{ item.conn_name }}"
+      ifname: "{{ item.ifname }}"
+      master: "{{ item.master }}"
+      state: present
+    with_items:
+      - "{{ nmcli_team_slave }}"
+
+- hosts: inetRouter
+  tasks:
+  - name: nmcli add team0 to inetRouter
+    nmcli:
+      type: team
+      mode: active-backup      
+      conn_name: team0
+      ip4: 192.168.255.1/24
+      state: present
+      autoconnect: yes
+
+- hosts: centralRouter
+  tasks:
+  - name: nmcli add team0 to centralRouter
+    nmcli:
+      type: team
+      mode: active-backup      
+      conn_name: team0
+      ip4: 192.168.255.2/24
+      gw4: 192.168.255.1
+      state: present
+      autoconnect: yes
+
+- hosts: teamhosts
+  tasks:
+  - name:
+    ini_file:
+      path: /etc/sysconfig/network-scripts/ifcfg-team0
+      state: present
+      no_extra_spaces: yes
+      section: null
+      option: BOOTPROTO
+      value: none
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
+
+- hosts: centralRouter
+  tasks:
+  - name: Add vlan 100 to centralRouter
+    nmcli:
+      type: vlan
+      conn_name: eth3.100
+      vlanid: 100
+      vlandev: eth3
+      state: present
+  - name: Add vlan 101 to centralRouter
+    nmcli:
+      type: vlan
+      conn_name: eth3.101
+      vlanid: 101
+      vlandev: eth3
+      state: present
+- hosts: testServer1
+  tasks:
+  - name: Add vlan
+    nmcli:
+      type: vlan
+      conn_name: eth1.100
+      vlanid: 100
+      vlandev: eth1
+      ip4: 10.10.10.1/24
+      state: present
+- hosts: testClient1
+  tasks:
+  - name: Add vlan
+    nmcli:
+      type: vlan
+      conn_name: eth1.100
+      vlanid: 100
+      vlandev: eth1
+      ip4: 10.10.10.254/24
+      state: present
+- hosts: testServer2
+  tasks:
+  - name: Add vlan
+    nmcli:
+      type: vlan
+      conn_name: eth1.101
+      vlanid: 101
+      vlandev: eth1
+      ip4: 10.10.10.1/24
+      state: present
+- hosts: testClient2
+  tasks:
+  - name: Add vlan
+    nmcli:
+      type: vlan
+      conn_name: eth1.101
+      vlanid: 101
+      vlandev: eth1
+      ip4: 10.10.10.254/24
+      state: present
+
+- hosts: all
+  tasks:
+  - name: restart network service
+    systemd:
+      name: network
+      state: restarted
+
+- hosts: inetRouter
+  tasks:
+  - name: Enable IPv4 forwarding
+    sysctl:
+      name: net.ipv4.conf.all.forwarding
+      value: 1
+      sysctl_set: yes

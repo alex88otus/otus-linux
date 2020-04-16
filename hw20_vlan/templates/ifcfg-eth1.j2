@@ -1,0 +1,11 @@
+ONBOOT=yes
+TYPE=Ethernet
+VLAN=yes
+VLAN_NAME_TYPE=DEV_PLUS_VID_NO_PAD
+DEVICE=eth1.{{ vlanid }}
+PHYSDEV=eth1
+VLAN_ID={{ vlanid }}
+BOOTPROTO=static
+IPADDR={{ ipaddr }}
+PREFIX=24
+NM_CONTROLLED=no

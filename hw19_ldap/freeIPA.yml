@@ -24,7 +24,7 @@
       - reload NetworkManager
   handlers:
   - name: reload NetworkManager
-    service:
+    systemd:
       name: NetworkManager
       state: reloaded
 

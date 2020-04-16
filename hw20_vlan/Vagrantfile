@@ -1,0 +1,138 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+  :inetRouter => {
+    :box_name => "centos/7",
+    #:public => {:ip => '10.10.10.1', :adapter => 1},
+    :net => [
+      {adapter: 2, auto_config: false, virtualbox__intnet: "router-net"},
+      {adapter: 3, auto_config: false, virtualbox__intnet: "router-net"},
+    ]
+  },
+
+  :centralRouter => {
+    :box_name => "centos/7",
+    :net => [
+      {adapter: 2, auto_config: false, virtualbox__intnet: "router-net"},
+      {adapter: 3, auto_config: false, virtualbox__intnet: "router-net"},
+      {adapter: 4, auto_config: false, virtualbox__intnet: "vlan-net"},
+    ]
+  },
+
+  :testServer1 => {
+    :box_name => "centos/7",
+    :net => [
+      {adapter: 2, auto_config: false, virtualbox__intnet: "vlan-net"},
+    ]
+  },
+
+  :testClient1 => {
+    :box_name => "centos/7",
+    :net => [
+      {adapter: 2, auto_config: false, virtualbox__intnet: "vlan-net"},
+    ]
+  },
+
+  :testServer2 => {
+    :box_name => "centos/7",
+    :net => [
+      {adapter: 2, auto_config: false, virtualbox__intnet: "vlan-net"},
+    ]
+  },
+
+  :testClient2 => {
+    :box_name => "centos/7",
+    :net => [
+      {adapter: 2, auto_config: false, virtualbox__intnet: "vlan-net"},
+    ]
+  },
+}
+
+Vagrant.configure("2") do |config|
+
+  MACHINES.each do |boxname, boxconfig|
+
+    config.vm.define boxname do |box|
+
+        box.vm.box = boxconfig[:box_name]
+        box.vm.host_name = boxname.to_s
+
+        boxconfig[:net].each do |ipconf|
+          box.vm.network "private_network", ipconf
+        end
+        
+        if boxconfig.key?(:public)
+          box.vm.network "public_network", boxconfig[:public]
+        end
+
+        box.vm.provision "shell", inline: <<-SHELL
+          mkdir -p ~root/.ssh
+          cp ~vagrant/.ssh/auth* ~root/.ssh
+          # yum -y install NetworkManager-glib nm-connection-editor libsemanage-python policycoreutils-python
+        SHELL
+        
+        case boxname.to_s
+        when "inetRouter"
+          box.vm.provision "shell", run: "always", inline: <<-SHELL
+            echo "NOZEROCONF=yes" >> /etc/sysconfig/network
+            echo "NETWORKING_IPV6=no" >> /etc/sysconfig/network
+            echo "IPV6INIT=no" >> /etc/sysconfig/network
+            systemctl restart network
+            systemctl restart network
+            iptables -t nat -A POSTROUTING ! -d 192.168.0.0/16 -o eth0 -j MASQUERADE
+            sysctl -w net.ipv4.conf.all.forwarding=1
+            SHELL
+        when "centralRouter"
+          box.vm.provision "shell", run: "always", inline: <<-SHELL
+            echo "NOZEROCONF=yes" >> /etc/sysconfig/network
+            echo "NETWORKING_IPV6=no" >> /etc/sysconfig/network
+            echo "IPV6INIT=no" >> /etc/sysconfig/network
+            echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            systemctl restart network
+            systemctl restart network
+            SHELL
+        when "testServer1"
+          box.vm.provision "shell", run: "always", inline: <<-SHELL
+            echo "NOZEROCONF=yes" >> /etc/sysconfig/network
+            echo "NETWORKING_IPV6=no" >> /etc/sysconfig/network
+            echo "IPV6INIT=no" >> /etc/sysconfig/network
+            echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0 
+            systemctl restart network
+            systemctl restart network
+            SHELL
+        when "testClient1"
+          box.vm.provision "shell", run: "always", inline: <<-SHELL
+            echo "NOZEROCONF=yes" >> /etc/sysconfig/network
+            echo "NETWORKING_IPV6=no" >> /etc/sysconfig/network
+            echo "IPV6INIT=no" >> /etc/sysconfig/network
+            echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0 
+            systemctl restart network
+            systemctl restart network
+            SHELL
+        when "testServer2"
+          box.vm.provision "shell", run: "always", inline: <<-SHELL
+            echo "NOZEROCONF=yes" >> /etc/sysconfig/network
+            echo "NETWORKING_IPV6=no" >> /etc/sysconfig/network
+            echo "IPV6INIT=no" >> /etc/sysconfig/network
+            echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            systemctl restart network
+            systemctl restart network
+            SHELL
+        when "testClient2"
+          box.vm.provision "shell", run: "always", inline: <<-SHELL
+            echo "NOZEROCONF=yes" >> /etc/sysconfig/network
+            echo "NETWORKING_IPV6=no" >> /etc/sysconfig/network
+            echo "IPV6INIT=no" >> /etc/sysconfig/network
+            echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            systemctl restart network
+            systemctl restart network
+            SHELL
+        end
+
+      end
+
+  end
+  
+end
+
