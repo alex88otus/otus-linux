@@ -1,29 +1,19 @@
+---
 - hosts: teamhosts
   tasks:
-  - name: cp config templates to config-scripts
+  - name: cp configs eth1 eth2 to teamhosts
     template:
-      src: templates/ifcfg-eth{{ item }}
-      dest: /etc/sysconfig/network-scripts/
+      src: templates/ifcfg-eth
+      dest: /etc/sysconfig/network-scripts/ifcfg-eth{{ item }}
       owner: root
       group: root
       mode: 0644
     with_items:
       - 1
       - 2
-- hosts: inetRouter
-  tasks:
-  - name: cp config template to config-scripts
+  - name: cp config team0 to teamhosts
     template:
-      src: templates/ifcfg-team0_iR
-      dest: /etc/sysconfig/network-scripts/ifcfg-team0
-      owner: root
-      group: root
-      mode: 0644
-- hosts: centralRouter
-  tasks:
-  - name: cp config template to config-scripts
-    template:
-      src: templates/ifcfg-team0_cR
+      src: templates/ifcfg-team0_{{ inventory_hostname }}
       dest: /etc/sysconfig/network-scripts/ifcfg-team0
       owner: root
       group: root
@@ -31,7 +21,7 @@
 
 - hosts: centralRouter
   tasks:
-  - name: cp config template to config-scripts
+  - name: cp config eth3 to centralRouter
     template:
       src: templates/ifcfg-eth3
       dest: /etc/sysconfig/network-scripts/ifcfg-eth3
@@ -40,9 +30,9 @@
       mode: 0644
 - hosts: vlanhosts
   tasks:
-  - name: cp config template to config-scripts
+  - name: cp config eth1 to vlanhosts
     template:
-      src: templates/ifcfg-eth1_tst
+      src: templates/ifcfg-eth1
       dest: /etc/sysconfig/network-scripts/ifcfg-eth1
       owner: root
       group: root
@@ -50,19 +40,19 @@
 
 - hosts: centralRouter
   tasks:
-  - name: cp vlan config files to centralRouter
+  - name: cp vlan configs to centralRouter
     template:
-      src: "{{ item }}"
-      dest: /etc/sysconfig/network-scripts/
+      src: templates/ifcfg-eth3.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-eth3.{{ item }}
       owner: root
       group: root
       mode: 0644
-    with_fileglob:
-      - templates/ifcfg-eth3.10*
-
+    with_items:
+      - 100
+      - 101
 - hosts: vlanhosts
   tasks:
-  - name: cp vlan config files to vlanhosts
+  - name: cp vlan config to vlanhosts
     template:
       src: templates/ifcfg-eth1.j2
       dest: /etc/sysconfig/network-scripts/ifcfg-eth1.{{ vlanid }}
@@ -72,7 +62,7 @@
 
 - hosts: all
   tasks:
-  - name: restart network service
+  - name: restart network
     systemd:
       name: network
       state: restarted

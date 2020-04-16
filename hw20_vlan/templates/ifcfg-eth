@@ -1,4 +1,4 @@
-DEVICE=eth2
+DEVICE=eth{{ item }}
 DEVICETYPE=TeamPort
 ONBOOT=yes
 BOOTPROTO=none
