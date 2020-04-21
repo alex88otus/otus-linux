@@ -1,4 +1,4 @@
-## Урок №18: team and vlan
+## Урок №20: team and vlan
 ### Решение
 #### Конфигурирование
 Поднимаем виртукалки поочередно командой `vagrant up` чтобы не сбился форвардинг портов. 
@@ -74,6 +74,5 @@ listening on eth3, link-type EN10MB (Ethernet), capture size 262144 bytes
 11:09:42.634300 08:00:27:0a:12:4e (oui Unknown) > Broadcast, ethertype 802.1Q (0x8100), length 64: vlan 100, p 0, ethertype ARP, Request who-has 10.10.10.1 (Broadcast) tell 10.10.10.254, length 46
 11:09:43.634980 08:00:27:0a:12:4e (oui Unknown) > Broadcast, ethertype 802.1Q (0x8100), length 64: vlan 100, p 0, ethertype ARP, Request who-has 10.10.10.1 (Broadcast) tell 10.10.10.254, length 46
 ```
-
 ### Конец решения
 ### Выполненo
