@@ -6,7 +6,7 @@
 2 - сеть hostonly **local**, адрес 10.10.10.10   
 С хостовой машины 10.10.10.10 пингуется.   
 Также включаем firewalld командой `systemctl start firewalld.service`.   
-На centralServer устанавливаем nginx, запускаем/
+На centralServer устанавливаем nginx, запускаем.
 #### Проброс 8080 порта с inetRouter2 на 80 порт centralServer
 - При помощи firewalld c маскарадингом
 ```bash
