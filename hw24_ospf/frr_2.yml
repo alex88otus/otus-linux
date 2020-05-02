@@ -1,0 +1,24 @@
+---
+- hosts: all
+  tasks:
+  - name: cp ospf configs to hosts
+    template:
+      src: ospfd.conf2.j2
+      dest: /etc/frr/ospfd.conf
+      owner: frr
+      group: frr
+      mode: 0644
+  - name: (re)start frr
+    systemd:
+      name: frr
+      state: restarted
+      enabled: yes
+  - name: Enable IPv4 rp_filter
+    sysctl:
+      name: net.ipv4.conf.{{ item }}.rp_filter
+      value: '1'
+      sysctl_set: yes
+    with_items:
+      - all
+      - eth2
+      - eth3

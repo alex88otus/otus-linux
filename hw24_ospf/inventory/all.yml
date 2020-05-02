@@ -1,0 +1,29 @@
+all:
+  hosts:
+    R1:
+      ansible_host: 192.168.1.11
+      ansible_ssh_private_key_file: .vagrant/machines/R1/virtualbox/private_key
+      net1: 10.10.12.0/30
+      net2: 10.10.31.0/30
+      nei1: 10.10.12.2
+      nei2: 10.10.31.1
+      cost1:
+      cost2: 'ip ospf cost 250'
+    R2:
+      ansible_host: 192.168.2.22
+      ansible_ssh_private_key_file: .vagrant/machines/R2/virtualbox/private_key
+      net1: 10.10.23.0/30
+      net2: 10.10.12.0/30
+      nei1: 10.10.23.2
+      nei2: 10.10.12.1
+      cost1:
+      cost2:
+    R3:
+      ansible_host: 192.168.3.33
+      ansible_ssh_private_key_file: .vagrant/machines/R3/virtualbox/private_key
+      net1: 10.10.31.0/30
+      net2: 10.10.23.0/30
+      nei1: 10.10.31.2
+      nei2: 10.10.23.1
+      cost1: 'ip ospf cost 250'
+      cost2:

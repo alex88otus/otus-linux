@@ -1,0 +1,126 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+  :R1 => {
+    :box_name => "centos/7",
+    :net => [
+      {ip: '192.168.1.11', adapter: 2, netmask: "255.255.255.0", virtualbox__hostonly: "111"},
+      {ip: '10.10.12.1', adapter: 3, netmask: "255.255.255.252", virtualbox__intnet: "net12"},
+      {ip: '10.10.31.2', adapter: 4, netmask: "255.255.255.252", virtualbox__intnet: "net31"},
+    ]
+  },
+  :R2 => {
+    :box_name => "centos/7",
+    :net => [
+      {ip: '192.168.2.22', adapter: 2, netmask: "255.255.255.0", virtualbox__hostonly: "222"},
+      {ip: '10.10.23.1', adapter: 3, netmask: "255.255.255.252", virtualbox__intnet: "net23"},
+      {ip: '10.10.12.2', adapter: 4, netmask: "255.255.255.252", virtualbox__intnet: "net12"},
+    ]
+  },
+  :R3 => {
+    :box_name => "centos/7",
+    :net => [
+      {ip: '192.168.3.33', adapter: 2, netmask: "255.255.255.0", virtualbox__hostonly: "333"},
+      {ip: '10.10.31.1', adapter: 3, netmask: "255.255.255.252", virtualbox__intnet: "net31"},
+      {ip: '10.10.23.2', adapter: 4, netmask: "255.255.255.252", virtualbox__intnet: "net23"},
+    ]
+  },
+  # :ansible => {
+  #   :box_name => "centos/7",
+  #   :net => [
+  #     {ip: '192.168.0.100', adapter: 2, netmask: "255.255.255.0", virtualbox__hostonly: "all"},
+  #   ]
+  # },
+}
+
+Vagrant.configure("2") do |config|
+
+  # config.vm.define "R2" do |v|
+  #   v.vm.network :forwarded_port, host: 18080, guest: 8080
+  #   v.vm.network "private_network", ip: "10.10.10.10"
+  # end
+
+  MACHINES.each do |boxname, boxconfig|
+
+    config.vm.define boxname do |box|
+
+        box.vm.box = boxconfig[:box_name]
+        box.vm.host_name = boxname.to_s
+
+        boxconfig[:net].each do |ipconf|
+          box.vm.network "private_network", ipconf
+        end
+        
+        if boxconfig.key?(:public)
+          box.vm.network "public_network", boxconfig[:public]
+        end
+
+        box.vm.provision "shell", inline: <<-SHELL
+          mkdir -p ~root/.ssh
+          cp ~vagrant/.ssh/auth* ~root/.ssh
+          yum install -y wget nano
+        SHELL
+        
+        case boxname.to_s
+        when "R1"
+          box.vm.provision "shell", run: "always", inline: <<-SHELL
+            echo "NOZEROCONF=yes" >> /etc/sysconfig/network
+            echo "NETWORKING_IPV6=no" >> /etc/sysconfig/network
+            echo "IPV6INIT=no" >> /etc/sysconfig/network
+            # echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0 
+            systemctl restart network
+            systemctl restart network
+            wget -q https://ci1.netdef.org/artifact/LIBYANG-YANGRELEASE/shared/build-10/CentOS-7-x86_64-Packages/libyang-0.16.111-0.x86_64.rpm
+            wget -q https://github.com/FRRouting/frr/releases/download/frr-7.2/frr-7.2-01.el7.centos.x86_64.rpm
+            yum install -y libyang-0.16.111-0.x86_64.rpm
+            yum install -y frr-7.2-01.el7.centos.x86_64.rpm
+            setsebool -P zebra_write_config 1
+            SHELL
+        when "R2"
+          box.vm.provision "shell", run: "always", inline: <<-SHELL
+            echo "NOZEROCONF=yes" >> /etc/sysconfig/network
+            echo "NETWORKING_IPV6=no" >> /etc/sysconfig/network
+            echo "IPV6INIT=no" >> /etc/sysconfig/network
+            # echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+            systemctl restart network
+            systemctl restart network
+            wget -q https://ci1.netdef.org/artifact/LIBYANG-YANGRELEASE/shared/build-10/CentOS-7-x86_64-Packages/libyang-0.16.111-0.x86_64.rpm
+            wget -q https://github.com/FRRouting/frr/releases/download/frr-7.2/frr-7.2-01.el7.centos.x86_64.rpm
+            yum install -y libyang-0.16.111-0.x86_64.rpm
+            yum install -y frr-7.2-01.el7.centos.x86_64.rpm
+            setsebool -P zebra_write_config 1
+            SHELL
+        when "R3"
+          box.vm.provision "shell", run: "always", inline: <<-SHELL
+            echo "NOZEROCONF=yes" >> /etc/sysconfig/network
+            echo "NETWORKING_IPV6=no" >> /etc/sysconfig/network
+            echo "IPV6INIT=no" >> /etc/sysconfig/network
+            # echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0 
+            systemctl restart network
+            systemctl restart network
+            wget -q https://ci1.netdef.org/artifact/LIBYANG-YANGRELEASE/shared/build-10/CentOS-7-x86_64-Packages/libyang-0.16.111-0.x86_64.rpm
+            wget -q https://github.com/FRRouting/frr/releases/download/frr-7.2/frr-7.2-01.el7.centos.x86_64.rpm
+            yum install -y libyang-0.16.111-0.x86_64.rpm
+            yum install -y frr-7.2-01.el7.centos.x86_64.rpm
+            setsebool -P zebra_write_config 1
+            SHELL
+        # when "ansible"
+        #   box.vm.provision "shell", run: "always", inline: <<-SHELL
+        #     echo "NOZEROCONF=yes" >> /etc/sysconfig/network
+        #     echo "NETWORKING_IPV6=no" >> /etc/sysconfig/network
+        #     echo "IPV6INIT=no" >> /etc/sysconfig/network
+        #     # echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0 
+        #     systemctl restart network
+        #     systemctl restart network
+        #     yum install -y epel-release
+        #     yum install -y ansible
+        #     SHELL
+        end
+
+      end
+
+  end
+  
+end
+

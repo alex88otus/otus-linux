@@ -1,0 +1,41 @@
+---
+- hosts: all
+  tasks:
+  - name: cp ospf configs to hosts
+    template:
+      src: ospfd.conf.j2
+      dest: /etc/frr/ospfd.conf
+      owner: frr
+      group: frr
+      mode: 0644
+  - name: make sure line 'ospfd=yes' is set in /etc/frr/daemons
+    ini_file:
+      path: /etc/frr/daemons
+      state: present
+      no_extra_spaces: yes
+      section: null
+      option: ospfd
+      value: 'yes'
+      owner: frr
+      group: frr
+      mode: 0750
+      backup: no
+  - name: (re)start frr
+    systemd:
+      name: frr
+      state: restarted
+      enabled: yes
+  - name: Enable IPv4 forwarding
+    sysctl:
+      name: net.ipv4.conf.all.forwarding
+      value: '1'
+      sysctl_set: yes
+  - name: Enable IPv4 rp_filter
+    sysctl:
+      name: net.ipv4.conf.{{ item }}.rp_filter
+      value: '0'
+      sysctl_set: yes
+    with_items:
+      - all
+      - eth2
+      - eth3

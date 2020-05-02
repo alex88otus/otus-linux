@@ -1,0 +1,31 @@
+! -*- ospf -*-
+!
+! OSPFd sample configuration file
+!
+!
+!hostname ospfd
+!password zebra
+!enable password please-set-at-here
+!
+!
+log stdout
+log file /var/log/frr/ospfd.log
+
+router ospf
+network {{ net1 }} area 0
+network {{ net2 }} area 0
+neighbor {{ nei1 }}
+neighbor {{ nei2 }}
+!no default-information originate
+
+interface eth2
+!ip ospf mtu-ignore
+ip ospf hello-interval 5
+ip ospf dead-interval 15
+!ip ospf cost 1
+
+interface eth3
+!ip ospf mtu-ignore
+ip ospf hello-interval 5
+ip ospf dead-interval 15
+ip ospf cost 250
