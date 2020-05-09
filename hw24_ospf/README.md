@@ -6,6 +6,7 @@
 | - | - | - | - |
 | eth2 | 10.10.12.1/30 (net12) | 10.10.23.1/30 (net23) | 10.10.31.1/30 (net31) |
 | eth3 | 10.10.31.2/30 (net31) | 10.10.12.2/30 (net12) | 10.10.23.2/30 (net23) |
+
 Устанавливаем frr
 ```bash
 wget https://ci1.netdef.org/artifact/LIBYANG-YANGRELEASE/shared/build-10/CentOS-7-x86_64-Packages/libyang-0.16.111-0.x86_64.rpm
