@@ -6,9 +6,8 @@
     yum: 
       name: bind, bind-utils, ntp
       state: latest
-
-  - name: copy transferkey to all servers and the client
-    copy: src=named.zonetransfer.key dest=/etc/named.zonetransfer.key owner=root group=named mode=0644
+  - name: set the process type named_t permissive
+    command: chcon -R -t named_tmp_t /etc/named
 
 - hosts: ns01
   become: yes
@@ -18,12 +17,12 @@
   - name: copy zones
     copy: src={{ item }} dest=/etc/named/ owner=root group=named mode=0660
     with_fileglob:
-      - named.d*
+      - named.*
   - name: copy resolv.conf to the servers
     copy: src=servers-resolv.conf dest=/etc/resolv.conf owner=root group=root mode=0644
   
   - name: set /etc/named permissions
-    file: path=/etc/named owner=root group=named mode=0670
+    file: path=/etc/named owner=root group=named mode=0770
 
   - name: ensure named is running and enabled
     service: name=named state=restarted enabled=yes
@@ -37,12 +36,12 @@
     copy: src=servers-resolv.conf dest=/etc/resolv.conf owner=root group=root mode=0644
 
   - name: set /etc/named permissions
-    file: path=/etc/named owner=root group=named mode=0670
+    file: path=/etc/named owner=root group=named mode=0770
 
   - name: ensure named is running and enabled
     service: name=named state=restarted enabled=yes
     
-- hosts: client
+- hosts: client, client2
   become: yes
   tasks:
   - name: copy resolv.conf to the client
