@@ -2,17 +2,17 @@
 ### Решение
 #### Бэкапирование с Borg
 Стенд описан в [Vagrantfile](Vagrantfile), бэкапирование работает сразу после `vagrant up`.
-#### Настройка сервера
+#### Настройка сервера `backup`
 Добавялем пользователя borg с созданием домашнего каталога `useradd -m borg`, копируем файл [authorized_keys](.ssh/authorized_keys) для возможности подключения по ssh.
 `command="borg serve"` в файле говорит о том, что только эта команда доступна для запуска пользователю при подключении по ssh.
 
 Устанавливаем cам Borg.
 ```bash
-wget -q https://github.com/borgbackup/borg/releases/download/1.1.11/borg-linux64 -O /usr/local/bin/borg
-chmod +x /usr/local/bin/borg
+yum install -y epel-release
+yum install -y borgbackup
 ```
 Процесс установки одинаков как для сервера так и для клиента.
-#### Настройка клиента
+#### Настройка клиента `server`
 Для полного бэкапа `/etc` нужен root-доступ, соответственно все настройки делаем для root.
 Копируем ключи, настраиваем ssh
 ```bash
@@ -26,58 +26,101 @@ ssh-keyscan -H 192.168.11.11 >> ~root/.ssh/known_hosts
 cp /vagrant/borg_backup.sh /opt
 chmod +x /opt/borg_backup.sh
 ```
-В скрипте [borg_backup.sh](borg_backup.sh) команда создания архива, `BORG_PASSPHRASE=Qwerty1234` переменная с паролем для доступа к шифрованному репозиторию Borg, ключ `-C lzma,9` для максимального сжатия архива, `borg@192.168.11.11:BACKUP::client-etc_{now}` соответственно "юзер"@"адрес подключения к серверу":"имя репозитория"::"имя архива с датой и временем", `/etc` то что бэкапируем, `&>> /var/log/borg.log` для записи стандастного вывода и ошибок в лог.
-
-Копируем cronfile [root](root) `cp /vagrant/root /var/spool/cron`.
+В скрипте [borg_backup.sh](borg_backup.sh):
+- Конструкция для защиты от мультизапуска
 ```bash
-*/10 * * * * /opt/borg_backup.sh
+LOCKFILE=/tmp/lockfile
+if [ -e $LOCKFILE ] && kill -0 "$(cat $LOCKFILE)"; then
+    echo "already running"
+    exit
+fi
+
+# Make sure the lockfile is removed when we exit and then claim it
+trap 'rm -f $LOCKFILE; exit' INT TERM EXIT
+echo $$ >$LOCKFILE
+
+******
+
+# Delete lockfile
+rm -f $LOCKFILE
 ```
-Так как каждый бэкап утилитой Borg - это дедуплицированный полный бэкап, то по условию задания запускаем скрипт каждые 10 минут.
+- Команда создания архива  - `borg create` где ключ `-C lzma,9` для максимального сжатия архива, `"$BACKUP_USER"@"$BACKUP_HOST":"$BACKUP_REPO"::etc_{now}` соответственно "юзер"@"адрес подключения к серверу":"имя репозитория"::"имя архива с датой и временем" (берется из соответствующих переменных), `/etc` то что бэкапируем, `2>>$LOG` для записи потока ошибок в лог.
+- Команда очистки репозитория от старых архивов - `borg prune` где `--keep-within=30d` оставляет все архивы за последние 30 дней и `--keep-monthly=2` оставляет ещё по одному последнему архиву каждого из последних двух месяцев.
+
+Копируем cronfile [root](root) `cp /vagrant/root /var/spool/cron`, запускает borg раз в час.
+```bash
+0 * * * * /opt/borg_backup.sh
+```
 
 В финале запуск инициализации Borg-репозитория
 ```bash
 export BORG_PASSPHRASE=Qwerty1234
-/usr/local/bin/./borg init -e repokey borg@192.168.11.11:BACKUP
+borg init -e repokey borg@192.168.11.11:BACKUP
 ```
 Ключ `-e repokey` говорит о создании шифрованного репозитория с паролем и ключом, который будет храниться внутри репозитория.
+`BORG_PASSPHRASE=Qwerty1234` переменная с паролем для доступа к шифрованному репозиторию Borg соответственно есть и в скрипте.
 
 Перечитываем конфигурацию cron командой `systemctl reload crond`
-#### Результаты работы
-... запуска на 2 часа
-```bash
-[root@client vagrant]# /usr/local/bin/borg list borg@192.168.11.11:BACKUP
-Enter passphrase for key ssh://borg@192.168.11.11/./BACKUP: 
-client-etc_2020-04-01T21:30:02       Wed, 2020-04-01 21:30:03 [f8cd2453294785a6280ecfac077f47671f0e9181ba1e93dbb13f672e38deb8d7]
-client-etc_2020-04-01T21:40:01       Wed, 2020-04-01 21:40:02 [be3ebcd2543e442939f7e46892b3aa0e1138466ac4b294978433874ea6ffcf33]
-client-etc_2020-04-01T21:50:02       Wed, 2020-04-01 21:50:03 [7dddf994c298e4275829e3070c187e2021149577fd7a1b3c53335f5b7bb7234a]
-client-etc_2020-04-01T22:00:02       Wed, 2020-04-01 22:00:03 [68f5051738d013289b6402552a34ba526b381cf251937b50ba61024b3fbf194d]
-client-etc_2020-04-01T22:10:01       Wed, 2020-04-01 22:10:02 [dcdfbd10d42891441de93bf3baa7e483b4bb7feb2b003b66dc9e3872a6332c4a]
-client-etc_2020-04-01T22:20:02       Wed, 2020-04-01 22:20:03 [ca0f904f3995aa1aacd88c80c5095f1706074875779784633651fc11c2d1ce88]
-client-etc_2020-04-01T22:30:02       Wed, 2020-04-01 22:30:03 [bf8fd84658aeec46e5f2808429f049e368b6604405d8d8801c781fbe218fe5ac]
-client-etc_2020-04-01T22:40:01       Wed, 2020-04-01 22:40:02 [be330a91024a8852c96f5ec1e493941308e0c5099f1d787dd2ff7f387e50c711]
-client-etc_2020-04-01T22:50:01       Wed, 2020-04-01 22:50:03 [fbbc01f52b1a8e6e14344cd2edbd2e6bf4851ae89509f6519423da4bae28c3e9]
-client-etc_2020-04-01T23:00:02       Wed, 2020-04-01 23:00:03 [1baece9cff7d36ee0539c72eb7dda4a08427e49925143e4f47a5c69c84e223b9]
-client-etc_2020-04-01T23:10:01       Wed, 2020-04-01 23:10:02 [2b2161f925a89a9ef3701f86ca63c80a1a341498eab0b0382c5c34dbe32ae26c]
-client-etc_2020-04-01T23:20:01       Wed, 2020-04-01 23:20:02 [bcbe3a4f28fcb62a4ed0e380cabc4a1b6a7d503e3bcfe85a4db6dee180d6f9d4]
-client-etc_2020-04-01T23:30:01       Wed, 2020-04-01 23:30:02 [ade4e9c57c6bc51306b620c98a624ff5d2d8256d776366ee6b43bb3e2ed36ae6]
-```
+#### Пример лог файла
 ```bash
 ------------------------------------------------------------------------------
-Archive name: client-etc_2020-04-01T23:30:01
-Archive fingerprint: ade4e9c57c6bc51306b620c98a624ff5d2d8256d776366ee6b43bb3e2ed36ae6
-Time (start): Wed, 2020-04-01 23:30:02
-Time (end):   Wed, 2020-04-01 23:30:03
-Duration: 0.28 seconds
-Number of files: 1690
+------------------------------------------------------------------------------
+2020-05-23T09:38:28+0000 BORGBACKUP INIT
+------------------------------------------------------------------------------
+A repository already exists at borg@192.168.11.11:BACKUP.
+------------------------------------------------------------------------------
+DONE
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+2020-05-23T10:00:01+0000 BORGBACKUP CREATE
+------------------------------------------------------------------------------
+Archive name: etc_2020-05-23T10:00:01
+Archive fingerprint: f71a0a3331cfcf60c69272c8eda4bffbbbc979cddec057cb9a45c149afe3e822
+Time (start): Sat, 2020-05-23 10:00:02
+Time (end):   Sat, 2020-05-23 10:00:04
+Duration: 1.33 seconds
+Number of files: 1699
 Utilization of max. archive size: 0%
 ------------------------------------------------------------------------------
                        Original size      Compressed size    Deduplicated size
-This archive:               27.81 MB              9.23 MB                599 B
-All archives:              361.47 MB            119.94 MB              8.81 MB
+This archive:               28.43 MB              9.37 MB             71.94 kB
+All archives:                1.22 GB            402.81 MB              9.32 MB
 
                        Unique chunks         Total chunks
-Chunk index:                    1290                21880
+Chunk index:                    1384                72935
 ------------------------------------------------------------------------------
+DONE
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+2020-05-23T10:00:01+0000 BORGBACKUP PRUNE
+------------------------------------------------------------------------------
+Keeping archive: etc_2020-05-23T10:00:01              Sat, 2020-05-23 10:00:02 [f71a0a3331cfcf60c69272c8eda4bffbbbc979cddec057cb9a45c149afe3e822]
+Keeping archive: etc_2020-05-23T09:36:01              Sat, 2020-05-23 09:36:02 [72f51c5102f68eb2c431df6855db9834735bd97bba6db827ee3ab81f8694a11e]
+------------------------------------------------------------------------------
+DONE
 ```
+#### Восстановление файлов
+Монтируем borg-репозиторий
+```bash
+borg mount borg@192.168.11.11:BACKUP /mnt
+```
+Проверяем
+```bash
+[root@server vagrant]# ll /mnt/
+total 0
+drwxr-xr-x. 1 root root 0 May 23 09:36 etc_2020-05-23T09:36:01
+drwxr-xr-x. 1 root root 0 May 23 10:00 etc_2020-05-23T10:00:01
+drwxr-xr-x. 1 root root 0 May 23 11:00 etc_2020-05-23T11:00:02
+drwxr-xr-x. 1 root root 0 May 23 12:00 etc_2020-05-23T12:00:01
+[root@server vagrant]# cd /mnt/etc_2020-05-23T12\:00\:01/
+[root@server etc_2020-05-23T12:00:01]# ll
+total 0
+drwxr-xr-x. 1 root root 0 May 23 09:38 etc
+```
+Восстанавливаем данные
+```bash
+yes | cp -rf etc /
+```
+Работает.
 ### Конец решения
 ### Выполненo задание со "звездочкой"
