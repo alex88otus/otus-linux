@@ -1,0 +1,101 @@
+---
+- hosts: all
+  tasks:
+  - name: install base packages on all hosts
+    yum: 
+      name: nano, epel-release, python-psycopg2, https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+      state: latest
+  - name: install postgresql v12
+    yum: 
+      name: postgresql12-server
+      state: latest
+
+- hosts: backup
+  tasks:
+  - name: install borgbackup to backuphost
+    yum: 
+      name: borgbackup
+      state: latest
+
+- hosts: base, replica
+  tasks:
+  - name: initial process for master and slave
+    command: /usr/pgsql-12/bin/postgresql-12-setup initdb
+
+- hosts: base
+  tasks:
+  - name: enable and start pg
+    systemd:
+      name: postgresql-12
+      state: started
+      enabled: yes
+
+- hosts: base
+  become_user: postgres
+  tasks:
+  - name: create the sample table "guestbook"
+    postgresql_query:
+      db: postgres
+      query: CREATE TABLE guestbook (visitor_email text, vistor_id serial, date timestamp, message text)
+  - name: insert to the sample table
+    postgresql_query:
+      db: postgres
+      query: INSERT INTO guestbook (visitor_email, date, message) VALUES ( 'jim@gmail.com', current_date, 'This is a test')
+  - name: add replication slot
+    postgresql_query:
+      db: postgres
+      query: SELECT pg_create_physical_replication_slot('standby_slot')
+  - name: add new user with replication rights
+    postgresql_user:
+      name: repluser
+      password: Qwerty1234
+      conn_limit: 5
+      role_attr_flags: REPLICATION
+  - name: create archive folder
+    command: mkdir -p /var/lib/pgsql/12/backups/001
+  - name: copy postgresql.conf to master
+    copy: src=postgresql.conf.base dest=/var/lib/pgsql/12/data/postgresql.conf owner=postgres group=postgres mode=0600
+  - name: copy pg_hba.conf to master
+    copy: src=pg_hba.conf.base dest=/var/lib/pgsql/12/data/pg_hba.conf owner=postgres group=postgres mode=0600
+
+- hosts: base
+  tasks:
+  - name: restart pg
+    systemd:
+      name: postgresql-12
+      state: restarted
+
+- hosts: replica
+  become_user: postgres
+  tasks:
+  - name: mv
+    command: mv /var/lib/pgsql/12/data /var/lib/pgsql/12/data_old
+  - name: copy passfile to slave
+    copy: src=.pgpass dest=/var/lib/pgsql/.pgpass owner=postgres group=postgres mode=0600
+  - name: backup
+    command: pg_basebackup -h 192.168.11.10 -D /var/lib/pgsql/12/data -U repluser -v --wal-method=stream -R -P -w
+  - name: copy postgresql.conf to slave
+    copy: src=postgresql.conf.replica dest=/var/lib/pgsql/12/data/postgresql.conf owner=postgres group=postgres mode=0600
+  # - name: copy pg_hba.conf to slave
+  #   copy: src=pg_hba.conf.replica dest=/var/lib/pgsql/12/data/pg_hba.conf owner=postgres group=postgres mode=0600
+
+- hosts: replica
+  tasks:
+  - name: enable and start pg
+    systemd:
+      name: postgresql-12
+      state: started
+      enabled: yes
+
+- hosts: backup
+  tasks:
+  - name: copy passfile to backuphost
+    copy: src=.pgpass dest=/var/lib/pgsql/.pgpass owner=postgres group=postgres mode=0600
+  - name: copy backup script to backuphost
+    copy: src=borg_backup.sh dest=/opt/borg_backup.sh owner=root group=root mode=0700
+  - name: copy cronfile to backuphost
+    copy: src=root dest=/var/spool/cron/root owner=root group=root mode=0600
+  - name: restart cron
+    systemd:
+      name: crond
+      state: restarted

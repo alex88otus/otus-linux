@@ -1,0 +1,104 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "base" do |base|
+    base.vm.box = "centos/7"
+    base.vm.hostname = 'base'
+
+    base.vm.network :private_network, ip: "192.168.11.10"
+    base.vm.network :forwarded_port, guest: 22, host: 2200, id: "ssh"
+
+    base.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--name", "base"]
+    end
+    
+    # base.vm.provision "shell", inline: <<-SHELL
+    #   # yum install -y nano epel-release
+    #   # yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    #   # yum install -y postgresql12-server
+    #   # /usr/pgsql-12/bin/postgresql-12-setup initdb
+    #   # systemctl enable postgresql-12
+    #   # systemctl start postgresql-12
+    #   # useradd -m borg
+    #   # mkdir ~borg/.ssh
+    #   # cp /vagrant/.ssh/authorized_keys ~borg/.ssh
+    #   # chown -R borg:borg ~borg/.ssh
+    #   # yum install -y borgbackup
+    # SHELL
+  end
+
+  config.vm.define "replica" do |replica|
+    replica.vm.box = "centos/7"
+    replica.vm.hostname = 'replica'
+
+    replica.vm.network :private_network, ip: "192.168.11.11"
+    replica.vm.network :forwarded_port, guest: 22, host: 2222, id: "ssh"
+
+    replica.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--name", "replica"]
+    end
+
+    # replica.vm.provision "shell", inline: <<-SHELL
+    #   # yum install -y nano epel-release
+    #   # yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    #   # yum install -y postgresql12-server
+    #   # /usr/pgsql-12/bin/postgresql-12-setup initdb
+    #   # mkdir ~root/.ssh
+    #   # cp /vagrant/.ssh/id_rsa ~root/.ssh
+    #   # chmod 600 ~root/.ssh/id_rsa
+    #   # yum install -y nano epel-release
+    #   # yum install -y borgbackup
+    #   # ssh-keyscan -H 192.168.11.11 >> ~root/.ssh/known_hosts
+    #   # cp /vagrant/borg_backup.sh /opt
+    #   # chmod +x /opt/borg_backup.sh
+    #   # cp /vagrant/root /var/spool/cron
+    #   # export BORG_PASSPHRASE=Qwerty1234
+    #   # echo "------------------------------------------------------------------------------" >>/var/log/borg.log
+    #   # echo "------------------------------------------------------------------------------" >>/var/log/borg.log
+    #   # echo "$(date --iso-8601=seconds) BORGBACKUP INIT" >>/var/log/borg.log
+    #   # echo "------------------------------------------------------------------------------" >>/var/log/borg.log
+    #   # borg init -e repokey borg@192.168.11.11:BACKUP 2>>/var/log/borg.log
+    #   # echo "------------------------------------------------------------------------------" >>/var/log/borg.log
+    #   # echo "DONE" >>/var/log/borg.log
+    #   # systemctl reload crond
+    # SHELL
+  end
+
+  config.vm.define "backup" do |backup|
+    backup.vm.box = "centos/7"
+    backup.vm.hostname = 'backup'
+
+    backup.vm.network :private_network, ip: "192.168.11.111"
+    backup.vm.network :forwarded_port, guest: 22, host: 2210, id: "ssh"
+
+    backup.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--name", "backup"]
+    end
+
+    # backup.vm.provision "shell", inline: <<-SHELL
+    #   # useradd -m borg
+    #   # mkdir ~borg/.ssh
+    #   # cp /vagrant/.ssh/authorized_keys ~borg/.ssh
+    #   # chown -R borg:borg ~borg/.ssh
+    #   # yum install -y nano epel-release
+    #   # yum install -y borgbackup
+    # SHELL
+  end
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.verbose = "v"
+    ansible.playbook = "provisioning/playbook.yml"
+    ansible.become = true
+  end
+end
