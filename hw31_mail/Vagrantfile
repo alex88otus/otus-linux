@@ -1,0 +1,36 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "mail" do |mail|
+    mail.vm.box = "centos/7"
+    mail.vm.hostname = 'mail'
+
+    mail.vm.network :private_network, ip: "192.168.11.10"
+    mail.vm.network :forwarded_port, guest: 22, host: 2200, id: "ssh"
+    # mail.vm.network :forwarded_port, guest: 8888, host: 8888
+
+    mail.vm.provider :virtualbox do |v|
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--cpus", 4]
+      v.customize ["modifyvm", :id, "--memory", 512]
+      v.customize ["modifyvm", :id, "--name", "mail"]
+    end
+    mail.vm.provision "shell", inline: <<-SHELL
+      yum install -y nano epel-release dovecot policycoreutils-python
+      cp /vagrant/main.cf /etc/postfix/main.cf
+      cp /vagrant/dovecot.conf /etc/dovecot/dovecot.conf
+      semanage permissive -a postfix_local_t
+      adduser ag
+      echo "Otus2020" | sudo passwd --stdin ag
+      mkdir /home/ag/maildir
+      chown ag:ag /home/ag/maildir
+      chmod 700 /home/ag/maildir
+      systemctl restart postfix
+      systemctl enable dovecot
+      systemctl start dovecot
+      SHELL
+  end
+
+end
