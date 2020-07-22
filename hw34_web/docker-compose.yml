@@ -56,8 +56,6 @@ services:
     image: ghost:3.26.0-alpine
     container_name: ghost
     restart: unless-stopped
-    ports:
-      - 2368:2368
     environment:
       database__client: mysql
       database__connection__host: db-gh
