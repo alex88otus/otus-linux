@@ -1,0 +1,93 @@
+version: '3'
+
+services:
+  mysql_wp:
+    image: mysql:latest
+    container_name: db-wp
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=wordpress
+      - MYSQL_ROOT_PASSWORD=Qwerty1234
+    command: '--default-authentication-plugin=mysql_native_password'
+    networks:
+      - just_net
+    cap_add:
+      - SYS_NICE  # CAP_SYS_NICE
+
+  mysql_gh:
+    image: mysql:latest
+    container_name: db-gh
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=ghost
+      - MYSQL_ROOT_PASSWORD=Qwerty1234
+    command: '--default-authentication-plugin=mysql_native_password'
+    networks:
+      - just_net
+    cap_add:
+      - SYS_NICE  # CAP_SYS_NICE
+
+  wordpress:
+    depends_on:
+      - mysql_wp
+    image: wordpress:5.4.2-php7.2-fpm-alpine
+    container_name: wp
+    restart: unless-stopped
+    environment:
+      - WORDPRESS_DB_HOST=db-wp:3306
+      - WORDPRESS_DB_USER=root
+      - WORDPRESS_DB_PASSWORD=Qwerty1234
+      - WORDPRESS_DB_NAME=wordpress
+    volumes:
+      - wpsite:/var/www/html
+    networks:
+      - just_net
+  
+  plone:
+    image: plone:5.2.1-alpine
+    container_name: plone
+    restart: unless-stopped
+    networks:
+      - just_net
+
+  ghost:
+    depends_on:
+      - mysql_gh
+    image: ghost:3.26.0-alpine
+    container_name: ghost
+    restart: unless-stopped
+    ports:
+      - 2368:2368
+    environment:
+      database__client: mysql
+      database__connection__host: db-gh
+      database__connection__user: root
+      database__connection__password: Qwerty1234
+      database__connection__database: ghost
+    networks:
+      - just_net
+
+  webserver:
+    depends_on:
+      - wordpress
+      - plone
+      - ghost
+    image: nginx:1.18.0-alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+      - 8081:8081
+      - 8082:8082
+    volumes:
+      - wpsite:/var/www/html
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - just_net
+
+volumes:
+  wpsite:
+
+networks:
+  just_net:
+    driver: bridge  
