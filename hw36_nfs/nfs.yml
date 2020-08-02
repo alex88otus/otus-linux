@@ -1,0 +1,73 @@
+- hosts: server
+  become: yes
+  tasks:
+  - name: mkdir1
+    file:
+      path: /opt/nfs_share
+      state: directory
+      owner: root
+      group: root
+      mode: '0755'
+  - name: mkdir2
+    file:
+      path: /opt/nfs_share/upload
+      state: directory
+      owner: nfsnobody
+      group: nfsnobody
+      mode: '0775'
+  - name: cp nfs.conf
+    template:
+      src: templates/nfs.conf
+      dest: /etc/nfs.conf
+      owner: root
+      group: root
+      mode: 0644
+  - name: cp exports
+    template:
+      src: templates/exports
+      dest: /etc/exports
+      owner: root
+      group: root
+      mode: 0644
+  - name: start firewalld
+    systemd:
+      name: firewalld
+      state: started
+      enabled: yes
+  - name: configure firewalld
+    firewalld:
+      service: "{{ item }}"
+      permanent: yes
+      state: enabled
+      immediate: yes
+    with_items:
+      - nfs
+      - mountd
+      - rpc-bind
+  - name: configure firewalld
+    firewalld:
+      port: 2049/udp
+      permanent: yes
+      state: enabled
+      immediate: yes
+  - name: start nfs-server
+    systemd:
+      name: nfs-server
+      state: started
+      enabled: yes
+
+- hosts: client
+  become: yes
+  tasks:
+  - name: start firewalld
+    systemd:
+      name: firewalld
+      state: started
+      enabled: yes
+  - name: mount nfs
+    mount:
+      path: /mnt
+      src: 192.168.10.10://opt/nfs_share
+      opts: udp,vers=3
+      state: mounted
+      fstype: nfs
