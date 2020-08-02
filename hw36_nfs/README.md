@@ -1,8 +1,12 @@
 ## Урок №36: nfs
 ### Решение
 #### Настройка
+<<<<<<< HEAD
 Виртуалки server (192.168.10.10) и client (192.168.10.100), описаны в [Vagrantfile](Vagrantfile).   
 Провижининг ансиблом, плэйбук - [nfs.yml](nfs.yml)   
+=======
+Виртуалки server (192.168.10.10) и client (192.168.10.100), описаны в [Vagrantfile](Vagrantfile). Провижининг ансиблом, плэйбук - [nfs.yml](nfs.yml)
+>>>>>>> c3ec88e9cfc40dc7ba94a894b48e74feb76cf107
 Конфиги nfs: [nfs.conf](templates/nfs.conf), [exports](templates/exports)
 #### Проверка
 ```bash
