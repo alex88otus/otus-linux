@@ -3,6 +3,7 @@
 #### Настройка
 Виртуалки server (192.168.10.10) и client (192.168.10.100), описаны в [Vagrantfile](Vagrantfile).   
 Провижининг ансиблом, плэйбук - [nfs.yml](nfs.yml)   
+Виртуалки server (192.168.10.10) и client (192.168.10.100), описаны в [Vagrantfile](Vagrantfile). Провижининг ансиблом, плэйбук - [nfs.yml](nfs.yml)
 Конфиги nfs: [nfs.conf](templates/nfs.conf), [exports](templates/exports)
 #### Проверка
 ```bash
